@@ -3,122 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>R-One Techlabs | Service Request Form</title>
+    <title>R1 Tech Labs | Integrated Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
-        .grid-input { width: 100%; padding: 10px; border: 1px solid #e2e8f0; font-size: 13px; outline: none; border-radius: 6px; }
+        .grid-input { width: 100%; padding: 8px; border: 1px solid #e2e8f0; font-size: 12px; outline: none; border-radius: 6px; }
         .grid-input:focus { border-color: #4f46e5; background-color: #f5f3ff; }
         .sticky-col { position: sticky; left: 0; background: #fff; z-index: 20; border-right: 2px solid #f1f5f9; }
-        .job-badge { font-family: monospace; font-size: 11px; font-weight: 800; color: #4338ca; background: #eef2ff; padding: 4px 10px; border-radius: 6px; border: 1px solid #c7d2fe; white-space: nowrap; }
+        .job-badge { font-family: monospace; font-size: 10px; font-weight: 800; color: #4338ca; background: #eef2ff; padding: 3px 8px; border-radius: 6px; border: 1px solid #c7d2fe; white-space: nowrap; }
+        .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
 <body class="antialiased">
 
     <div id="app" class="max-w-[1600px] mx-auto min-h-screen flex flex-col bg-white shadow-2xl relative">
         
-        <!-- Loading -->
+        <!-- Loading Overlay -->
         <div id="loading" class="fixed inset-0 bg-white z-[100] flex flex-col items-center justify-center">
             <div class="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-            <p class="mt-4 text-slate-500 font-bold text-xs uppercase tracking-widest tracking-widest">Base Connect Ho Raha Hai...</p>
+            <p class="mt-4 text-slate-500 font-bold text-xs uppercase tracking-widest">Loading Master System...</p>
         </div>
 
-        <!-- Navbar -->
-        <header class="bg-slate-900 px-6 py-5 text-white flex justify-between items-center shadow-xl">
+        <!-- App Header -->
+        <header class="bg-slate-900 px-6 py-5 text-white shrink-0 flex justify-between items-center shadow-xl">
             <div class="flex items-center gap-4">
-                <div class="p-2 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-500/30"><i data-lucide="shield-check" class="w-6 h-6"></i></div>
+                <div class="p-2 bg-indigo-600 rounded-xl"><i data-lucide="shield-check" class="w-6 h-6"></i></div>
                 <div>
-                    <h1 class="text-xl font-extrabold tracking-tight uppercase">R1 Tech Labs</h1>
-                    <p class="text-indigo-400 text-[9px] uppercase font-black tracking-widest mt-1">Instrument Master Portal</p>
+                    <h1 class="text-xl font-extrabold tracking-tight leading-none uppercase">R1 Tech Labs</h1>
+                    <p id="portalType" class="text-indigo-400 text-[9px] uppercase font-black tracking-widest mt-1 text-indigo-400">Customer Portal</p>
                 </div>
             </div>
             <div id="userTools" class="hidden flex items-center gap-4">
                 <div class="text-right hidden sm:block">
                     <p id="compDisplay" class="text-xs font-black uppercase">-</p>
-                    <p id="userDisplay" class="text-[10px] text-slate-400 font-bold">@username</p>
+                    <p id="userDisplay" class="text-[10px] text-slate-400 font-bold">@user</p>
                 </div>
                 <button onclick="logout()" class="p-2.5 bg-slate-800 rounded-xl hover:bg-red-600 transition-all border border-slate-700"><i data-lucide="log-out" class="w-5 h-5"></i></button>
             </div>
         </header>
 
         <main class="flex-grow flex flex-col overflow-hidden">
-            <!-- Auth Section -->
-            <div id="authView" class="hidden p-8 flex-grow flex items-center justify-center bg-slate-50">
+            
+            <!-- Auth View -->
+            <div id="authView" class="hidden p-8 flex-grow flex flex-col items-center justify-center bg-slate-50 relative">
+                <!-- Admin Toggle Button -->
+                <button id="adminToggle" onclick="toggleAdminMode()" class="absolute top-6 right-6 px-4 py-2 bg-slate-200 text-slate-700 text-[10px] font-black uppercase rounded-xl hover:bg-slate-300 transition-all">
+                    Login as Admin
+                </button>
+
                 <div class="w-full max-w-md bg-white p-10 rounded-[2.5rem] border shadow-2xl">
-                    <div class="flex p-1.5 bg-slate-100 rounded-2xl mb-8">
+                    <div id="authTabs" class="flex p-1.5 bg-slate-100 rounded-2xl mb-8">
                         <button onclick="toggleAuth('login')" id="loginTab" class="flex-1 py-3 text-xs font-black rounded-xl bg-white shadow-sm text-indigo-600 uppercase">Login</button>
-                        <button onclick="toggleAuth('signup')" id="signupTab" class="flex-1 py-3 text-xs font-black rounded-xl text-slate-500 uppercase">Naya Account</button>
+                        <button onclick="toggleAuth('signup')" id="signupTab" class="flex-1 py-3 text-xs font-black rounded-xl text-slate-500 uppercase">Signup</button>
                     </div>
+
+                    <h2 id="authHeading" class="text-center font-black text-slate-800 uppercase text-xs mb-6 tracking-widest hidden">Admin Access Only</h2>
+
                     <div id="loginForm" class="space-y-4">
-                        <input type="text" id="lUser" class="w-full p-4 rounded-xl border-2 bg-slate-50 outline-none focus:bg-white focus:border-indigo-500 transition-all" placeholder="Username">
-                        <input type="password" id="lPass" class="w-full p-4 rounded-xl border-2 bg-slate-50 outline-none focus:bg-white focus:border-indigo-500 transition-all" placeholder="Password">
-                        <button onclick="handleLogin()" id="loginBtn" class="w-full bg-indigo-600 text-white font-black py-4 rounded-xl shadow-lg uppercase text-xs mt-2">Login Karein</button>
+                        <input type="text" id="lUser" class="w-full p-4 rounded-xl border-2 bg-slate-50 outline-none focus:bg-white focus:border-indigo-500" placeholder="Username">
+                        <input type="password" id="lPass" class="w-full p-4 rounded-xl border-2 bg-slate-50 outline-none focus:bg-white focus:border-indigo-500" placeholder="Password">
+                        <button onclick="handleLogin()" id="loginBtn" class="w-full bg-indigo-600 text-white font-black py-4 rounded-xl shadow-xl uppercase text-xs">Sign In</button>
                     </div>
+
                     <div id="signupForm" class="hidden space-y-4">
-                        <input type="text" id="sComp" class="w-full p-4 rounded-xl border-2 bg-slate-50 outline-none" placeholder="Company Ka Naam">
-                        <input type="text" id="sUser" class="w-full p-4 rounded-xl border-2 bg-slate-50 outline-none" placeholder="Apna Username Chunein">
-                        <input type="password" id="sPass" class="w-full p-4 rounded-xl border-2 bg-slate-50 outline-none" placeholder="Password Set Karein">
-                        <button onclick="handleSignup()" id="signupBtn" class="w-full bg-indigo-600 text-white font-black py-4 rounded-xl uppercase text-xs">Register Karein</button>
+                        <input type="text" id="sComp" class="w-full p-4 rounded-xl border-2 bg-slate-50 outline-none" placeholder="Company Name">
+                        <input type="text" id="sUser" class="w-full p-4 rounded-xl border-2 bg-slate-50 outline-none" placeholder="Choose Username">
+                        <input type="password" id="sPass" class="w-full p-4 rounded-xl border-2 bg-slate-50 outline-none" placeholder="Set Password">
+                        <button onclick="handleSignup()" id="signupBtn" class="w-full bg-indigo-600 text-white font-black py-4 rounded-xl uppercase text-xs">Register Account</button>
                     </div>
                 </div>
             </div>
 
-            <!-- Dashboard Section -->
+            <!-- Dashboard View -->
             <div id="dashboardView" class="hidden flex-grow flex flex-col p-6 overflow-hidden">
                 <div class="flex justify-between items-center mb-8 shrink-0">
                     <div>
-                        <h2 class="text-3xl font-black text-slate-900 tracking-tighter">Lot History</h2>
-                        <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Global Sequence Active</p>
+                        <h2 id="dashTitle" class="text-3xl font-black text-slate-900 tracking-tighter">My History</h2>
+                        <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Cloud Database Connected</p>
                     </div>
-                    <button onclick="initiateNewSRF()" class="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black flex items-center gap-3 shadow-2xl hover:bg-indigo-700 transition-all active:scale-95"><i data-lucide="plus-circle" class="w-6 h-6"></i> NEW SRF LOT</button>
+                    <button id="newLotBtn" onclick="initiateNewSRF()" class="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black flex items-center gap-3 shadow-2xl hover:bg-indigo-700 transition-all"><i data-lucide="plus" class="w-6 h-6"></i> NEW SRF LOT</button>
                 </div>
-                <div id="lotList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 overflow-y-auto pr-2"></div>
-                <div id="emptyMsg" class="hidden text-center py-20 text-slate-300 font-bold uppercase tracking-widest text-xs">Koi Record Nahi Mila.</div>
+                <div id="lotList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 overflow-y-auto pr-2 custom-scrollbar"></div>
+                <div id="emptyMsg" class="hidden text-center py-20 text-slate-300 font-bold uppercase tracking-widest text-xs">No records found.</div>
             </div>
 
-            <!-- Grid Entry Section -->
+            <!-- Grid Editor View -->
             <div id="gridEditorView" class="hidden flex-grow flex flex-col overflow-hidden bg-slate-50">
                 <div class="p-4 border-b bg-white flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm z-30">
                     <div class="flex items-center gap-4">
-                        <button onclick="showDashboard()" class="p-3 bg-slate-100 rounded-xl hover:bg-slate-200"><i data-lucide="chevron-left" class="w-6 h-6 text-slate-600"></i></button>
+                        <button onclick="showDashboard()" class="p-3 bg-slate-100 rounded-xl"><i data-lucide="chevron-left" class="w-6 h-6 text-slate-600"></i></button>
                         <div>
                             <h2 id="srfIdLabel" class="text-xl font-black text-slate-900 tracking-tighter">SRF/--/--</h2>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Excel-Style Entry Mode</p>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Calibration Lot Entry</p>
                         </div>
                     </div>
-                    <div class="flex gap-2 w-full md:w-auto">
-                        <button onclick="addRow()" class="flex-1 md:flex-none px-5 py-3 border-2 border-indigo-600 text-indigo-600 text-xs font-black rounded-xl hover:bg-indigo-50"><i data-lucide="plus" class="w-4 h-4"></i> ADD ROW</button>
-                        <button onclick="submitLot()" id="submitBtn" class="flex-1 md:flex-none px-8 py-3 bg-indigo-600 text-white text-xs font-black rounded-xl shadow-xl hover:bg-indigo-700 active:scale-95">SUBMIT LOT</button>
+                    <div class="flex gap-2">
+                        <button onclick="addRow()" class="px-5 py-3 border-2 border-indigo-600 text-indigo-600 text-xs font-black rounded-xl hover:bg-indigo-50"><i data-lucide="plus" class="w-4 h-4"></i> Add Instrument</button>
+                        <button onclick="submitLot()" id="submitBtn" class="px-8 py-3 bg-indigo-600 text-white text-xs font-black rounded-xl shadow-xl active:scale-95">Submit Entire Lot</button>
                     </div>
                 </div>
                 <div class="flex-grow overflow-auto p-4 custom-scrollbar">
-                    <div class="bg-white rounded-3xl shadow-2xl border overflow-hidden min-w-[1500px]">
+                    <div class="bg-white rounded-3xl shadow-2xl border overflow-hidden min-w-[1700px]">
                         <table class="w-full text-left border-collapse">
-                            <thead class="bg-slate-900 text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] border-b border-slate-800">
+                            <thead class="bg-slate-900 text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">
                                 <tr>
-                                    <th class="p-5 sticky-col w-[180px] text-center">Global Job No.</th>
-                                    <th class="p-5 w-[280px]">Instrument Name *</th>
-                                    <th class="p-5 w-[160px]">Make</th>
-                                    <th class="p-5 w-[160px]">Serial No.</th>
-                                    <th class="p-5 w-[180px]">ID No. *</th>
-                                    <th class="p-5 w-[160px]">Range</th>
+                                    <th class="p-5 sticky-col w-[150px] text-center">Job No.</th>
+                                    <th class="p-5 w-[250px]">Instrument Name *</th>
+                                    <th class="p-5 w-[150px]">Make</th>
+                                    <th class="p-5 w-[150px]">Model</th>
+                                    <th class="p-5 w-[150px]">Serial No.</th>
+                                    <th class="p-5 w-[150px]">ID No. *</th>
+                                    <th class="p-5 w-[120px]">Range</th>
+                                    <th class="p-5 w-[100px]">L.C.</th>
+                                    <th class="p-5 w-[150px]">Cal Date</th>
+                                    <th class="p-5 w-[150px]">Location</th>
                                     <th class="p-5 w-[120px] text-center">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="gridBody" class="divide-y divide-slate-50"></tbody>
+                            <tbody id="gridBody"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
         </main>
-        
-        <!-- Toast -->
-        <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-4 rounded-3xl shadow-2xl opacity-0 transition-all duration-300 translate-y-10 z-[200] text-[10px] font-black uppercase tracking-widest">Done</div>
+        <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-4 rounded-3xl shadow-2xl opacity-0 transition-all duration-300 translate-y-10 z-[200] text-[10px] font-black uppercase">Notification</div>
     </div>
 
-    <!-- Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -140,6 +153,7 @@
         const DOMAIN = "@r1.com";
 
         let user = null;
+        let isAdmin = false;
         let activeSRF = "";
         let gridData = [];
         let unsub = null;
@@ -148,58 +162,103 @@
             user = u;
             document.getElementById('loading').classList.add('opacity-0', 'pointer-events-none');
             if (u) {
+                isAdmin = u.email.startsWith('admin'); // Simple logic for admin detection
                 document.getElementById('userTools').classList.remove('hidden');
+                document.getElementById('portalType').innerText = isAdmin ? "Master Admin Dashboard" : "Customer Portal";
+                document.getElementById('dashTitle').innerText = isAdmin ? "Global Records" : "My History";
+                document.getElementById('newLotBtn').classList.toggle('hidden', isAdmin);
+                
                 const p = await getDoc(doc(db, 'artifacts', APP_ID, 'users', u.uid, 'settings', 'profile'));
-                document.getElementById('compDisplay').innerText = p.exists() ? p.data().companyName : "Client";
+                document.getElementById('compDisplay').innerText = p.exists() ? p.data().companyName : (isAdmin ? "ADMIN" : "Client");
                 document.getElementById('userDisplay').innerText = "@" + u.email.split('@')[0];
                 showDashboard();
             } else {
-                document.getElementById('userTools').classList.add('hidden');
                 showView('authView');
             }
             lucide.createIcons();
         });
 
-        window.initiateNewSRF = async () => {
-            const btn = document.getElementById('loading');
-            btn.classList.remove('opacity-0', 'pointer-events-none');
-            
-            try {
-                const now = new Date();
-                const yy = now.getFullYear().toString().slice(-2);
-                const mm = (now.getMonth() + 1).toString().padStart(2, '0');
-                
-                // FETCH GLOBAL LOT COUNT
-                const lotsSnap = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots'));
-                const globalSequence = lotsSnap.size + 1;
-                
-                activeSRF = `R1/${yy}${mm}/C${globalSequence}`;
-                document.getElementById('srfIdLabel').innerText = activeSRF;
-                gridData = [{ id: Date.now(), name: '', make: '', srNo: '', idNo: '', range: '' }];
-                renderGrid();
-                showView('gridEditorView');
-            } catch(e) { console.error(e); }
-            finally { btn.classList.add('opacity-0', 'pointer-events-none'); }
+        // --- AUTH & TOGGLES ---
+        window.toggleAdminMode = () => {
+            const btn = document.getElementById('adminToggle');
+            const tabs = document.getElementById('authTabs');
+            const heading = document.getElementById('authHeading');
+            const sForm = document.getElementById('signupForm');
+            const lForm = document.getElementById('loginForm');
+
+            if(btn.innerText === "Login as Admin") {
+                btn.innerText = "Login as Customer";
+                tabs.classList.add('hidden');
+                heading.classList.remove('hidden');
+                sForm.classList.add('hidden');
+                lForm.classList.remove('hidden');
+                document.getElementById('lUser').placeholder = "Admin Username";
+            } else {
+                btn.innerText = "Login as Admin";
+                tabs.classList.remove('hidden');
+                heading.classList.add('hidden');
+                document.getElementById('lUser').placeholder = "Username";
+            }
         };
 
-        window.addRow = () => { gridData.push({ id: Date.now(), name: '', make: '', srNo: '', idNo: '', range: '' }); renderGrid(); };
+        window.toggleAuth = (m) => {
+            document.getElementById('loginTab').className = m === 'login' ? "flex-1 py-3 text-xs font-black rounded-xl bg-white shadow-sm text-indigo-600 uppercase" : "flex-1 py-3 text-xs font-black rounded-xl text-slate-500 uppercase";
+            document.getElementById('signupTab').className = m === 'signup' ? "flex-1 py-3 text-xs font-black rounded-xl bg-white shadow-sm text-indigo-600 uppercase" : "flex-1 py-3 text-xs font-black rounded-xl text-slate-500 uppercase";
+            document.getElementById('loginForm').classList.toggle('hidden', m !== 'login');
+            document.getElementById('signupForm').classList.toggle('hidden', m !== 'signup');
+        };
+
+        window.handleLogin = async () => {
+            const u = document.getElementById('lUser').value.trim() + DOMAIN;
+            const p = document.getElementById('lPass').value;
+            try { await signInWithEmailAndPassword(auth, u, p); } catch(e) { showToast("Invalid credentials"); }
+        };
+
+        window.handleSignup = async () => {
+            const c = document.getElementById('sComp').value.trim(), u = document.getElementById('sUser').value.trim() + DOMAIN, p = document.getElementById('sPass').value;
+            try {
+                const cred = await createUserWithEmailAndPassword(auth, u, p);
+                await setDoc(doc(db, 'artifacts', APP_ID, 'users', cred.user.uid, 'settings', 'profile'), { companyName: c });
+            } catch(e) { showToast(e.message); }
+        };
+
+        window.logout = () => signOut(auth);
+
+        // --- GRID LOGIC ---
+        window.initiateNewSRF = async () => {
+            const now = new Date();
+            const yy = now.getFullYear().toString().slice(-2);
+            const mm = (now.getMonth() + 1).toString().padStart(2, '0');
+            const snap = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots'));
+            activeSRF = `R1/${yy}${mm}/C${snap.size + 1}`;
+            document.getElementById('srfIdLabel').innerText = activeSRF;
+            gridData = [{ id: Date.now(), name: '', make: '', model: '', srNo: '', idNo: '', range: '', lc: '', calDate: '', location: '' }];
+            renderGrid();
+            showView('gridEditorView');
+        };
+
+        window.addRow = () => { gridData.push({ id: Date.now(), name: '', make: '', model: '', srNo: '', idNo: '', range: '', lc: '', calDate: '', location: '' }); renderGrid(); };
         window.copyRow = (idx) => { gridData.splice(idx+1, 0, {...gridData[idx], id: Date.now()}); renderGrid(); };
-        window.delRow = (idx) => { if(gridData.length > 1) { gridData.splice(idx,1); renderGrid(); } };
+        window.delRow = (idx) => { if(gridData.length > 1) { gridData.splice(idx, 1); renderGrid(); } };
         window.update = (idx, key, val) => { gridData[idx][key] = val; };
 
         function renderGrid() {
             const body = document.getElementById('gridBody');
             body.innerHTML = gridData.map((row, i) => `
-                <tr class="hover:bg-slate-50 border-b">
+                <tr class="hover:bg-slate-50 border-b transition-colors">
                     <td class="p-4 sticky-col text-center"><span class="job-badge">${activeSRF}/${i + 1}</span></td>
-                    <td class="p-2"><input type="text" class="grid-input font-bold" value="${row.name}" oninput="update(${i}, 'name', this.value)" placeholder="Instrument Name"></td>
+                    <td class="p-2"><input type="text" class="grid-input font-bold" value="${row.name}" oninput="update(${i}, 'name', this.value)" placeholder="e.g. Micrometer"></td>
                     <td class="p-2"><input type="text" class="grid-input" value="${row.make}" oninput="update(${i}, 'make', this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${row.model}" oninput="update(${i}, 'model', this.value)"></td>
                     <td class="p-2"><input type="text" class="grid-input" value="${row.srNo}" oninput="update(${i}, 'srNo', this.value)"></td>
-                    <td class="p-2"><input type="text" class="grid-input text-indigo-600 font-extrabold" value="${row.idNo}" oninput="update(${i}, 'idNo', this.value)" placeholder="ID No"></td>
+                    <td class="p-2"><input type="text" class="grid-input text-indigo-600 font-extrabold" value="${row.idNo}" oninput="update(${i}, 'idNo', this.value)"></td>
                     <td class="p-2"><input type="text" class="grid-input" value="${row.range}" oninput="update(${i}, 'range', this.value)"></td>
-                    <td class="p-2 flex items-center justify-center gap-2 mt-1">
-                        <button onclick="copyRow(${i})" class="p-2 text-indigo-500 hover:bg-indigo-50 rounded-lg"><i data-lucide="copy" class="w-4 h-4"></i></button>
-                        <button onclick="delRow(${i})" class="p-2 text-red-400 hover:bg-red-50 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    <td class="p-2"><input type="text" class="grid-input" value="${row.lc}" oninput="update(${i}, 'lc', this.value)"></td>
+                    <td class="p-2"><input type="date" class="grid-input" value="${row.calDate}" oninput="update(${i}, 'calDate', this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${row.location}" oninput="update(${i}, 'location', this.value)"></td>
+                    <td class="p-2 flex gap-1 justify-center mt-1">
+                        <button onclick="copyRow(${i})" class="p-2 text-indigo-500 hover:bg-indigo-100 rounded-lg"><i data-lucide="copy" class="w-4 h-4"></i></button>
+                        <button onclick="delRow(${i})" class="p-2 text-red-400 hover:bg-red-100 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </td>
                 </tr>
             `).join('');
@@ -215,67 +274,47 @@
                 const items = valid.map((item, i) => ({ ...item, jobNo: `${activeSRF}/${i + 1}` }));
                 const payload = { srfId: activeSRF, companyName: document.getElementById('compDisplay').innerText, userEmail: user.email, items, total: items.length, createdAt: serverTimestamp() };
                 await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots'), payload);
-                showToast("SRF Submitted Successfully! ✅");
+                showToast("SRF Lot Submitted! ✅");
                 showDashboard();
-            } catch (e) { showToast("Error!"); btn.disabled = false; }
+            } catch (e) { showToast("Sync Error!"); btn.disabled = false; }
         };
 
+        // --- DASHBOARD RENDER ---
         function fetchHistory() {
             if (unsub) unsub();
             const ref = collection(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots');
             unsub = onSnapshot(ref, (snap) => {
                 const list = document.getElementById('lotList'), empty = document.getElementById('emptyMsg');
                 list.innerHTML = '';
-                const myLots = snap.docs.filter(d => d.data().userEmail === user.email);
-                if (!myLots.length) { empty.classList.remove('hidden'); return; }
+                
+                // Admin can see everything, User sees only theirs
+                const filteredLots = isAdmin ? snap.docs : snap.docs.filter(d => d.data().userEmail === user.email);
+                
+                if (!filteredLots.length) { empty.classList.remove('hidden'); return; }
                 empty.classList.add('hidden');
-                myLots.forEach(d => {
+                
+                filteredLots.forEach(d => {
                     const l = d.data();
                     list.innerHTML += `
-                        <div class="bg-white p-7 rounded-[2rem] border-2 border-slate-50 shadow-sm hover:border-indigo-300 transition-all flex flex-col h-full">
-                            <div class="flex justify-between items-start mb-6">
-                                <div><h3 class="text-2xl font-black text-slate-900 tracking-tighter">${l.srfId}</h3><p class="text-[9px] text-slate-300 font-bold uppercase mt-1">${l.createdAt ? new Date(l.createdAt.toDate()).toLocaleDateString() : 'Syncing...'}</p></div>
-                                <span class="bg-indigo-50 text-indigo-600 text-[10px] font-black px-3 py-1 rounded-xl uppercase">Live</span>
+                        <div class="bg-white p-7 rounded-[2rem] border-2 border-slate-50 shadow-sm hover:border-indigo-300 transition-all flex flex-col h-full group">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 class="text-2xl font-black text-slate-900 tracking-tighter">${l.srfId}</h3>
+                                    <p class="text-[9px] text-slate-400 font-bold uppercase mt-1">${l.companyName}</p>
+                                </div>
+                                <span class="bg-indigo-50 text-indigo-600 text-[9px] font-black px-3 py-1.5 rounded-xl uppercase">Live</span>
                             </div>
-                            <div class="bg-slate-50 p-5 rounded-2xl mb-6 flex items-center gap-4 border border-slate-100/50">
-                                <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-indigo-600 shadow-sm"><i data-lucide="package" class="w-6 h-6"></i></div>
-                                <p class="text-base font-black text-slate-800">${l.total} Units</p>
+                            <div class="bg-slate-50 p-5 rounded-2xl flex-grow mb-6 flex items-center gap-4 border border-slate-100/50">
+                                <p class="text-sm font-black text-slate-800">${l.total} Instruments</p>
                             </div>
+                            <button class="w-full py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 border-2 rounded-2xl hover:bg-slate-900 hover:text-white transition-all">Details</button>
                         </div>`;
                 });
                 lucide.createIcons();
             });
         }
 
-        window.toggleAuth = (m) => {
-            const lT = document.getElementById('loginTab'), sT = document.getElementById('signupTab');
-            const lF = document.getElementById('loginForm'), sF = document.getElementById('signupForm');
-            if (m === 'login') {
-                lT.className = "flex-1 py-3 text-xs font-black rounded-xl bg-white shadow-sm text-indigo-600 uppercase";
-                sT.className = "flex-1 py-3 text-xs font-black rounded-xl text-slate-500 uppercase";
-                lF.classList.remove('hidden'); sF.classList.add('hidden');
-            } else {
-                sT.className = "flex-1 py-3 text-xs font-black rounded-xl bg-white shadow-sm text-indigo-600 uppercase";
-                lT.className = "flex-1 py-3 text-xs font-black rounded-xl text-slate-500 uppercase";
-                sF.classList.remove('hidden'); lF.classList.add('hidden');
-            }
-        };
-
-        window.handleLogin = async () => {
-            const u = document.getElementById('lUser').value.trim() + DOMAIN, p = document.getElementById('lPass').value;
-            try { await signInWithEmailAndPassword(auth, u, p); } catch(e) { showToast("Galti: Password check karein"); }
-        };
-
-        window.handleSignup = async () => {
-            const u = document.getElementById('sUser').value.trim() + DOMAIN, p = document.getElementById('sPass').value, c = document.getElementById('sComp').value.trim();
-            try {
-                const cred = await createUserWithEmailAndPassword(auth, u, p);
-                await setDoc(doc(db, 'artifacts', APP_ID, 'users', cred.user.uid, 'settings', 'profile'), { companyName: c });
-            } catch(e) { showToast(e.message); }
-        };
-
         window.showDashboard = () => { showView('dashboardView'); fetchHistory(); };
-        window.logout = () => signOut(auth);
         function showView(id) { ['authView', 'dashboardView', 'gridEditorView'].forEach(v => document.getElementById(v).classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); lucide.createIcons(); }
         function showToast(m) { const t = document.getElementById('toast'); t.innerText = m; t.classList.remove('opacity-0', 'translate-y-10'); setTimeout(() => t.classList.add('opacity-0', 'translate-y-10'), 3000); }
         window.update = update;
