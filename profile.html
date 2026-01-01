@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile | R1 Labs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;800&display=swap'); body { font-family: 'Outfit', sans-serif; }</style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <header class="bg-slate-900 p-6 text-white flex items-center gap-4">
+        <a href="dashboard.html" class="p-2 bg-slate-800 rounded-xl"><i data-lucide="arrow-left" class="w-5 h-5"></i></a>
+        <h1 class="font-black uppercase text-xl tracking-tighter">My Profile Settings</h1>
+    </header>
+
+    <main class="max-w-2xl mx-auto p-6 mt-10">
+        <div class="bg-white p-8 rounded-[2.5rem] shadow-2xl border border-slate-100">
+            <div id="loader" class="py-10 text-center"><div class="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto"></div></div>
+            
+            <div id="profileForm" class="hidden space-y-6">
+                <div class="grid grid-cols-1 gap-4">
+                    <p class="text-[10px] font-black uppercase text-indigo-600 ml-1">Company Details</p>
+                    <input type="text" id="comp" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:border-indigo-500" placeholder="Company Name">
+                    <textarea id="addr" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none h-24" placeholder="Address"></textarea>
+                    <input type="text" id="gst" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none" placeholder="GST Number">
+                    
+                    <p class="text-[10px] font-black uppercase text-indigo-600 ml-1 mt-4">Contact Person Details</p>
+                    <input type="text" id="cName" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none" placeholder="Contact Person Name">
+                    <input type="text" id="cDesig" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none" placeholder="Designation">
+                    <input type="text" id="cPhone" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none" placeholder="Phone Number">
+                    <input type="email" id="cEmail" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none" placeholder="Official Email">
+                </div>
+                
+                <button onclick="updateProfile()" id="saveBtn" class="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl uppercase text-xs shadow-xl hover:bg-indigo-700 transition-all">Update My Profile</button>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { auth, db, APP_ID } from './config.js';
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        let uid = "";
+        onAuthStateChanged(auth, async u => {
+            if(!u) window.location.href = 'index.html';
+            uid = u.uid;
+            const pSnap = await getDoc(doc(db, 'artifacts', APP_ID, 'users', u.uid, 'settings', 'profile'));
+            if(pSnap.exists()) {
+                const d = pSnap.data();
+                document.getElementById('comp').value = d.companyName || "";
+                document.getElementById('addr').value = d.address || "";
+                document.getElementById('gst').value = d.gstNo || "";
+                document.getElementById('cName').value = d.contactPerson || "";
+                document.getElementById('cDesig').value = d.designation || "";
+                document.getElementById('cPhone').value = d.phone || "";
+                document.getElementById('cEmail').value = d.officialEmail || "";
+            }
+            document.getElementById('loader').classList.add('hidden');
+            document.getElementById('profileForm').classList.remove('hidden');
+            lucide.createIcons();
+        });
+
+        window.updateProfile = async () => {
+            const btn = document.getElementById('saveBtn');
+            btn.disabled = true; btn.innerText = "Updating...";
+            const data = {
+                companyName: document.getElementById('comp').value.trim(),
+                address: document.getElementById('addr').value.trim(),
+                gstNo: document.getElementById('gst').value.trim(),
+                contactPerson: document.getElementById('cName').value.trim(),
+                designation: document.getElementById('cDesig').value.trim(),
+                phone: document.getElementById('cPhone').value.trim(),
+                officialEmail: document.getElementById('cEmail').value.trim()
+            };
+            try {
+                // Update private profile
+                await setDoc(doc(db, 'artifacts', APP_ID, 'users', uid, 'settings', 'profile'), data, { merge: true });
+                // Update public profile for Admin view
+                await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'customers', uid), data, { merge: true });
+                alert("Profile Updated Successfully! ✅");
+            } catch (e) { alert("Error: " + e.message); }
+            finally { btn.disabled = false; btn.innerText = "Update My Profile"; }
+        };
+    </script>
+</body>
+</html>
+
