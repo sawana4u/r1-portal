@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Management | R1 Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;800&display=swap'); body { font-family: 'Outfit', sans-serif; }</style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <header class="bg-slate-900 p-8 text-white flex justify-between items-center shadow-xl">
+        <div class="flex items-center gap-4">
+            <a href="admin.html" class="p-2 bg-slate-800 rounded-xl"><i data-lucide="arrow-left" class="w-5 h-5"></i></a>
+            <h1 class="text-2xl font-black uppercase tracking-tighter">Customer Directory</h1>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-6">
+        <div id="customerList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Customer Cards -->
+        </div>
+        <div id="loader" class="py-20 text-center"><div class="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto"></div></div>
+    </main>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="fixed inset-0 bg-slate-900/50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg p-8 rounded-[2.5rem] shadow-2xl overflow-y-auto max-h-[90vh]">
+            <h3 class="text-xl font-black mb-6 uppercase">Edit Customer Profile</h3>
+            <div id="modalForm" class="space-y-4">
+                <input type="hidden" id="editUid">
+                <input type="text" id="mComp" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none" placeholder="Company Name">
+                <textarea id="mAddr" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none h-20" placeholder="Address"></textarea>
+                <input type="text" id="mGst" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none" placeholder="GST Number">
+                <input type="text" id="mName" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none" placeholder="Contact Person">
+                <input type="text" id="mPhone" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none" placeholder="Phone">
+                <div class="flex gap-2 pt-4">
+                    <button onclick="closeModal()" class="flex-1 py-4 bg-slate-100 font-bold rounded-2xl uppercase text-xs">Cancel</button>
+                    <button onclick="saveCustomerChange()" class="flex-1 py-4 bg-indigo-600 text-white font-bold rounded-2xl uppercase text-xs">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { auth, db, APP_ID } from './config.js';
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { collection, onSnapshot, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        onAuthStateChanged(auth, u => {
+            if(!u || !u.email.startsWith('admin')) window.location.href = 'index.html';
+            fetchCustomers();
+        });
+
+        function fetchCustomers() {
+            const ref = collection(db, 'artifacts', APP_ID, 'public', 'data', 'customers');
+            onSnapshot(ref, snap => {
+                const list = document.getElementById('customerList');
+                const loader = document.getElementById('loader');
+                list.innerHTML = ''; loader.classList.add('hidden');
+                
+                snap.forEach(dSnap => {
+                    const c = dSnap.data();
+                    const cid = dSnap.id;
+                    list.innerHTML += `
+                        <div class="bg-white p-6 rounded-[2rem] border shadow-sm flex flex-col justify-between">
+                            <div>
+                                <h3 class="text-xl font-black text-slate-800">${c.companyName}</h3>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase mb-4">${c.gstNo || 'No GST'}</p>
+                                <div class="text-xs text-slate-500 space-y-1">
+                                    <p><strong>Person:</strong> ${c.contactPerson || '-'}</p>
+                                    <p><strong>Phone:</strong> ${c.phone || '-'}</p>
+                                </div>
+                            </div>
+                            <button onclick='openEditModal("${cid}", ${JSON.stringify(c)})' class="mt-6 w-full py-3 bg-indigo-50 text-indigo-600 rounded-xl font-black text-[10px] uppercase hover:bg-indigo-600 hover:text-white transition-all">Edit Details</button>
+                        </div>`;
+                });
+                lucide.createIcons();
+            });
+        }
+
+        window.openEditModal = (uid, data) => {
+            document.getElementById('editUid').value = uid;
+            document.getElementById('mComp').value = data.companyName || "";
+            document.getElementById('mAddr').value = data.address || "";
+            document.getElementById('mGst').value = data.gstNo || "";
+            document.getElementById('mName').value = data.contactPerson || "";
+            document.getElementById('mPhone').value = data.phone || "";
+            document.getElementById('editModal').classList.remove('hidden');
+        };
+
+        window.closeModal = () => document.getElementById('editModal').classList.add('hidden');
+
+        window.saveCustomerChange = async () => {
+            const uid = document.getElementById('editUid').value;
+            const data = {
+                companyName: document.getElementById('mComp').value,
+                address: document.getElementById('mAddr').value,
+                gstNo: document.getElementById('mGst').value,
+                contactPerson: document.getElementById('mName').value,
+                phone: document.getElementById('mPhone').value
+            };
+            try {
+                // Update Admin's view copy
+                await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'customers', uid), data, { merge: true });
+                // Note: Admin cannot directly write to user's private folder without special rules,
+                // but the next time the user saves an SRF, the public copy will be the master.
+                alert("Customer Details Updated! ✅");
+                closeModal();
+            } catch(e) { alert(e.message); }
+        };
+    </script>
+</body>
+</html>
+
