@@ -5,17 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register | R1 Tech Labs</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
+        body { font-family: 'Outfit', sans-serif; background-color: #f8fafc; }
+        .form-input { width: 100%; padding: 1rem; background-color: #f1f5f9; border: 2px solid transparent; border-radius: 1rem; outline: none; transition: all 0.2s; font-size: 0.875rem; }
+        .form-input:focus { border-color: #4f46e5; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+    </style>
 </head>
-<body class="bg-slate-50 flex items-center justify-center min-h-screen p-6">
-    <div class="w-full max-w-md bg-white p-10 rounded-[2.5rem] shadow-2xl">
-        <h2 class="text-center font-black uppercase text-xs mb-8 tracking-widest text-slate-400">Naya Account Banayein</h2>
-        <div class="space-y-4">
-            <input type="text" id="comp" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none" placeholder="Company Ka Naam">
-            <input type="text" id="user" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none" placeholder="Username Chunein">
-            <input type="password" id="pass" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none" placeholder="Password Set Karein">
-            <button onclick="handleSignup()" class="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl uppercase text-xs">Register</button>
-            <p class="text-center text-xs text-slate-400"><a href="index.html" class="text-indigo-600 font-bold">Back to Login</a></p>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div class="w-full max-w-2xl bg-white p-8 md:p-12 rounded-[2.5rem] shadow-2xl border border-slate-100 my-8">
+        <div class="text-center mb-8">
+            <h1 class="text-2xl font-black uppercase text-slate-900 tracking-tight">R1 Tech Labs</h1>
+            <p class="text-[10px] font-bold text-indigo-600 uppercase tracking-[0.3em] mt-2">Naya Business Account Banayein</p>
         </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <!-- Company Details Section -->
+            <div class="md:col-span-2">
+                <p class="text-[10px] font-black uppercase text-slate-400 mb-3 ml-1 tracking-widest">Company ki Jankari</p>
+                <input type="text" id="comp" class="form-input mb-4" placeholder="Company Ka Naam *">
+                <textarea id="addr" class="form-input h-24 mb-4" placeholder="Poora Office Address *"></textarea>
+                <input type="text" id="gst" class="form-input" placeholder="GST Number (Yadi hai)">
+            </div>
+
+            <!-- Contact Person Details Section -->
+            <div class="md:col-span-2 mt-2">
+                <p class="text-[10px] font-black uppercase text-slate-400 mb-3 ml-1 tracking-widest">Contact Person ki Jankari</p>
+            </div>
+            <input type="text" id="cName" class="form-input" placeholder="Person ka Naam *">
+            <input type="text" id="cDesig" class="form-input" placeholder="Designation (Ouhda)">
+            <input type="text" id="cPhone" class="form-input" placeholder="Mobile Number *">
+            <input type="email" id="cEmail" class="form-input" placeholder="Official Email ID *">
+
+            <!-- Security Section -->
+            <div class="md:col-span-2 mt-2">
+                <p class="text-[10px] font-black uppercase text-slate-400 mb-3 ml-1 tracking-widest">Login Details</p>
+            </div>
+            <input type="text" id="user" class="form-input" placeholder="Username Chunein *">
+            <input type="password" id="pass" class="form-input" placeholder="Password Set Karein *">
+        </div>
+
+        <button onclick="handleSignup()" id="signupBtn" class="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl uppercase text-xs mt-10 shadow-xl shadow-indigo-100 hover:bg-indigo-700 active:scale-[0.98] transition-all">Account Register Karein</button>
+        
+        <p class="text-center text-xs text-slate-400 mt-6">Pehle se account hai? <a href="index.html" class="text-indigo-600 font-bold hover:underline">Login Karein</a></p>
     </div>
 
     <script type="module">
@@ -24,12 +57,59 @@
         import { doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         window.handleSignup = async () => {
-            const c = document.getElementById('comp').value, u = document.getElementById('user').value + DOMAIN, p = document.getElementById('pass').value;
+            // Saara data ek jagah jama kar rahe hain
+            const signupData = {
+                comp: document.getElementById('comp').value.trim(),
+                addr: document.getElementById('addr').value.trim(),
+                gst: document.getElementById('gst').value.trim(),
+                cName: document.getElementById('cName').value.trim(),
+                cDesig: document.getElementById('cDesig').value.trim(),
+                cPhone: document.getElementById('cPhone').value.trim(),
+                cEmail: document.getElementById('cEmail').value.trim(),
+                user: document.getElementById('user').value.trim(),
+                pass: document.getElementById('pass').value
+            };
+
+            // Validation: Zaroori fields check kar rahe hain
+            if(!signupData.comp || !signupData.addr || !signupData.user || !signupData.pass || !signupData.cName || !signupData.cPhone) {
+                alert("Kripya saare star (*) wale fields bharein!");
+                return;
+            }
+
+            const btn = document.getElementById('signupBtn');
+            btn.disabled = true;
+            btn.innerText = "Registering...";
+
             try {
-                const cred = await createUserWithEmailAndPassword(auth, u, p);
-                await setDoc(doc(db, 'artifacts', APP_ID, 'users', cred.user.uid, 'settings', 'profile'), { companyName: c });
+                // Firebase Auth mein user create kar rahe hain
+                const email = signupData.user + DOMAIN;
+                const cred = await createUserWithEmailAndPassword(auth, email, signupData.pass);
+                
+                const profileData = {
+                    companyName: signupData.comp,
+                    address: signupData.addr,
+                    gstNo: signupData.gst,
+                    contactPerson: signupData.cName,
+                    designation: signupData.cDesig,
+                    phone: signupData.cPhone,
+                    officialEmail: signupData.cEmail,
+                    username: signupData.user,
+                    role: 'customer'
+                };
+
+                // 1. User ki private folder mein data save kar rahe hain
+                await setDoc(doc(db, 'artifacts', APP_ID, 'users', cred.user.uid, 'settings', 'profile'), profileData);
+
+                // 2. Admin ki public list mein data sync kar rahe hain
+                await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'customers', cred.user.uid), profileData);
+
+                alert("Account successfully ban gaya hai! ✅");
                 window.location.href = 'dashboard.html';
-            } catch (e) { alert(e.message); }
+            } catch (e) {
+                alert("Registration Error: " + e.message);
+                btn.disabled = false;
+                btn.innerText = "Account Register Karein";
+            }
         };
     </script>
 </body>
