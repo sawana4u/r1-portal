@@ -12,46 +12,41 @@
         .grid-input { width: 100%; padding: 8px; border: 1.5px solid #e2e8f0; font-size: 12px; outline: none; border-radius: 6px; }
         .grid-input:focus { border-color: #4f46e5; background-color: #f5f3ff; }
         .sticky-col { position: sticky; left: 0; background: #fff; z-index: 10; border-right: 2px solid #f1f5f9; }
-        .job-badge { font-family: monospace; font-size: 10px; font-weight: 800; color: #4338ca; background: #eef2ff; padding: 4px 8px; border-radius: 6px; border: 1px solid #c7d2fe; white-space: nowrap; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- Loading Screen -->
-    <div id="screenLoader" class="fixed inset-0 bg-white/90 z-[200] flex flex-col items-center justify-center transition-opacity duration-300">
+    <!-- Loading Overlay (Shuruat mein dikhega) -->
+    <div id="globalLoader" class="fixed inset-0 bg-white z-[500] flex flex-col items-center justify-center">
         <div class="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-        <p class="mt-4 text-slate-500 font-bold text-xs uppercase tracking-widest">Fetching Instrument Data...</p>
+        <p class="mt-4 text-slate-500 font-bold text-xs uppercase tracking-widest">Cloud se data la rahe hain...</p>
     </div>
 
-    <!-- Header -->
+    <!-- Top Navigation Bar -->
     <header class="bg-white border-b p-4 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 sticky top-0 z-50">
         <div class="flex items-center gap-4">
             <button onclick="goBack()" class="p-2 bg-slate-100 rounded-lg hover:bg-slate-200"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
             <div class="flex items-center gap-2">
-                <input type="text" id="srfPrefix" class="bg-slate-50 border p-2 rounded-lg text-xs font-bold w-24 text-center" placeholder="R1/2601" oninput="render()">
+                <input type="text" id="srfPrefix" class="bg-slate-50 border p-2 rounded-lg text-xs font-bold w-24 text-center" placeholder="R1/2601">
                 <span class="text-slate-400 font-bold">/</span>
-                <input type="text" id="srfLotNo" class="bg-indigo-50 border-2 border-indigo-200 p-2 rounded-lg text-xs font-black w-24 text-center text-indigo-600 uppercase" placeholder="C1" oninput="render()">
+                <input type="text" id="srfLotNo" class="bg-indigo-50 border-2 border-indigo-200 p-2 rounded-lg text-xs font-black w-24 text-center text-indigo-600 uppercase" placeholder="Lot No">
             </div>
-            <div id="modeTag" class="text-[9px] bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full font-black uppercase tracking-widest">New Entry</div>
+            <div id="statusTag" class="text-[9px] bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full font-black uppercase">Naya SRF</div>
         </div>
         <div class="flex gap-2">
-            <button onclick="addRow()" class="px-5 py-2.5 border-2 border-indigo-600 text-indigo-600 text-xs font-black rounded-xl hover:bg-indigo-50 transition-all flex items-center gap-2">
-                <i data-lucide="plus" class="w-4 h-4"></i> Add Row
-            </button>
-            <button onclick="submitLot()" id="subBtn" class="px-8 py-2.5 bg-indigo-600 text-white text-xs font-black rounded-xl shadow-xl hover:bg-indigo-700 active:scale-95 transition-all flex items-center gap-2">
-                <i data-lucide="save" class="w-4 h-4"></i> Save Changes
-            </button>
+            <button onclick="addRow()" class="px-5 py-2.5 border-2 border-indigo-600 text-indigo-600 text-xs font-black rounded-xl hover:bg-indigo-50">Naya Row</button>
+            <button onclick="submitLot()" id="subBtn" class="px-8 py-2.5 bg-indigo-600 text-white text-xs font-black rounded-xl shadow-xl hover:bg-indigo-700">Data Save Karein</button>
         </div>
     </header>
 
-    <!-- Main Grid -->
-    <main class="flex-grow overflow-auto p-4 custom-scrollbar">
+    <!-- Excel Table Area -->
+    <main class="flex-grow overflow-auto p-4">
         <div class="bg-white rounded-3xl border shadow-2xl overflow-hidden min-w-[1750px]">
             <table class="w-full text-left border-collapse">
-                <thead class="bg-slate-900 text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] border-b border-slate-800">
+                <thead class="bg-slate-900 text-[10px] text-slate-400 font-black uppercase tracking-widest border-b border-slate-800">
                     <tr>
                         <th class="p-5 sticky-col w-[180px] text-center">Auto Job No.</th>
-                        <th class="p-5 w-[280px]">Instrument Name *</th>
+                        <th class="p-5 w-[180px]">Instrument Name *</th>
                         <th class="p-5 w-[150px]">Make</th>
                         <th class="p-5 w-[150px]">Model</th>
                         <th class="p-5 w-[150px]">Serial No.</th>
@@ -60,12 +55,10 @@
                         <th class="p-5 w-[100px]">L.C.</th>
                         <th class="p-5 w-[150px]">Cal Date</th>
                         <th class="p-5 w-[180px]">Location</th>
-                        <th class="p-5 w-[150px] text-center">Shift / Delete</th>
+                        <th class="p-5 w-[150px] text-center">Actions</th>
                     </tr>
                 </thead>
-                <tbody id="gridBody" class="divide-y divide-slate-50">
-                    <!-- Rows injected here -->
-                </tbody>
+                <tbody id="gridBody" class="divide-y divide-slate-50"></tbody>
             </table>
         </div>
     </main>
@@ -73,126 +66,99 @@
     <script type="module">
         import { auth, db, APP_ID } from './config.js';
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { collection, getDocs, addDoc, setDoc, doc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { collection, getDocs, setDoc, doc, getDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        let user = null, gridData = [], existingDocId = null, companyName = "", userEmail = "";
-        const urlParams = new URLSearchParams(window.location.search);
-        existingDocId = urlParams.get('id');
+        let currentUser = null, gridData = [], docId = null, compName = "", email = "";
+        const params = new URLSearchParams(window.location.search);
+        docId = params.get('id'); // Admin se aayi hui ID
 
-        // Initializing logic
-        onAuthStateChanged(auth, async u => {
-            if(!u) { window.location.href = 'index.html'; return; }
-            user = u;
-            userEmail = u.email;
+        onAuthStateChanged(auth, async (user) => {
+            if(!user) { window.location.href = 'index.html'; return; }
+            currentUser = user;
+            email = user.email;
 
-            try {
-                if(existingDocId) {
-                    await loadExistingLot(existingDocId);
-                } else {
-                    const p = await getDoc(doc(db, 'artifacts', APP_ID, 'users', u.uid, 'settings', 'profile'));
-                    companyName = p.exists() ? p.data().companyName : "Client Account";
-                    await setupNewLot();
-                }
-            } catch (err) {
-                console.error("Auth Error:", err);
-                alert("Cloud Connection Error. Please refresh.");
-            } finally {
-                hideLoader();
+            // Agar ID hai toh data load karein
+            if(docId) {
+                await loadData(docId);
+            } else {
+                await initNew();
             }
+            hideLoader();
         });
 
-        async function loadExistingLot(id) {
-            const dSnap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots', id));
-            if(dSnap.exists()) {
-                const l = dSnap.data();
-                // Parse SRF ID: e.g., R1/2601/C1
-                const parts = l.srfId.split('/');
-                if(parts.length >= 3) {
-                    document.getElementById('srfPrefix').value = parts[0] + '/' + parts[1];
-                    document.getElementById('srfLotNo').value = parts[2];
+        async function loadData(id) {
+            try {
+                const snap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots', id));
+                if(snap.exists()) {
+                    const data = snap.data();
+                    const srfParts = data.srfId.split('/');
+                    
+                    document.getElementById('srfPrefix').value = srfParts[0] + '/' + srfParts[1];
+                    document.getElementById('srfLotNo').value = srfParts[2];
+                    
+                    compName = data.companyName;
+                    email = data.userEmail;
+                    gridData = data.items || [];
+                    
+                    document.getElementById('statusTag').innerText = "Edit Mode";
+                    document.getElementById('statusTag').className = "text-[9px] bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-black uppercase";
+                    document.getElementById('subBtn').innerText = "Update Record";
+                    render();
                 } else {
-                    document.getElementById('srfLotNo').value = l.srfId;
+                    alert("Data nahi mila!");
                 }
-                
-                companyName = l.companyName;
-                userEmail = l.userEmail;
-                gridData = l.items || [];
-                
-                document.getElementById('modeTag').innerText = "Edit Mode";
-                document.getElementById('modeTag').className = "text-[9px] bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-black uppercase tracking-widest";
-                render();
-            } else {
-                alert("Record not found!");
-                goBack();
-            }
+            } catch (e) { console.error(e); alert("Error loading data!"); }
         }
 
-        async function setupNewLot() {
+        async function initNew() {
             const now = new Date(), yy = now.getFullYear().toString().slice(-2), mm = (now.getMonth() + 1).toString().padStart(2, '0');
             document.getElementById('srfPrefix').value = `R1/${yy}${mm}`;
             
             const snap = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots'));
             document.getElementById('srfLotNo').value = `C${snap.size + 1}`;
             
+            const p = await getDoc(doc(db, 'artifacts', APP_ID, 'users', currentUser.uid, 'settings', 'profile'));
+            compName = p.exists() ? p.data().companyName : "Client";
+            
             gridData = [{ name: '', make: '', model: '', srNo: '', idNo: '', range: '', lc: '', calDate: '', location: '' }];
             render();
         }
 
-        window.addRow = () => {
-            gridData.push({ name: '', make: '', model: '', srNo: '', idNo: '', range: '', lc: '', calDate: '', location: '' });
+        window.addRow = () => { gridData.push({ name: '', make: '', model: '', srNo: '', idNo: '', range: '', lc: '', calDate: '', location: '' }); render(); };
+        
+        window.move = (idx, dir) => {
+            if(dir === 'up' && idx > 0) [gridData[idx], gridData[idx-1]] = [gridData[idx-1], gridData[idx]];
+            if(dir === 'down' && idx < gridData.length-1) [gridData[idx], gridData[idx+1]] = [gridData[idx+1], gridData[idx]];
             render();
         };
 
-        window.moveRow = (idx, direction) => {
-            if(direction === 'up' && idx > 0) {
-                [gridData[idx], gridData[idx-1]] = [gridData[idx-1], gridData[idx]];
-            } else if(direction === 'down' && idx < gridData.length - 1) {
-                [gridData[idx], gridData[idx+1]] = [gridData[idx+1], gridData[idx]];
-            }
-            render();
-        };
-
-        window.delRow = (idx) => {
-            if(gridData.length > 1) {
-                if(confirm("Delete this instrument?")) {
-                    gridData.splice(idx, 1);
-                    render();
-                }
-            } else {
-                alert("Kam se kam ek row honi chahiye.");
-            }
-        };
-
-        window.update = (i, k, v) => { 
-            gridData[i][k] = v; 
-        };
+        window.del = (idx) => { if(confirm("Delete instrument?")) { gridData.splice(idx, 1); render(); } };
+        window.upd = (i, k, v) => { gridData[i][k] = v; };
 
         function render() {
             const body = document.getElementById('gridBody');
-            const prefix = document.getElementById('srfPrefix').value || 'R1/--';
-            const lot = document.getElementById('srfLotNo').value || '--';
-            const fullSrf = `${prefix}/${lot}`;
+            const fullSrf = `${document.getElementById('srfPrefix').value}/${document.getElementById('srfLotNo').value}`;
 
             body.innerHTML = gridData.map((r, i) => `
                 <tr class="hover:bg-slate-50 transition-colors">
                     <td class="p-4 sticky-col text-center font-mono font-black text-indigo-600 text-[10px] border-r">
                         ${fullSrf}/${i + 1}
                     </td>
-                    <td class="p-2"><input type="text" class="grid-input font-bold" value="${r.name||''}" oninput="update(${i}, 'name', this.value)" placeholder="Instrument Name"></td>
-                    <td class="p-2"><input type="text" class="grid-input" value="${r.make||''}" oninput="update(${i}, 'make', this.value)"></td>
-                    <td class="p-2"><input type="text" class="grid-input" value="${r.model||''}" oninput="update(${i}, 'model', this.value)"></td>
-                    <td class="p-2"><input type="text" class="grid-input" value="${r.srNo||''}" oninput="update(${i}, 'srNo', this.value)"></td>
-                    <td class="p-2"><input type="text" class="grid-input text-indigo-600 font-bold" value="${r.idNo||''}" oninput="update(${i}, 'idNo', this.value)" placeholder="ID No"></td>
-                    <td class="p-2"><input type="text" class="grid-input" value="${r.range||''}" oninput="update(${i}, 'range', this.value)"></td>
-                    <td class="p-2"><input type="text" class="grid-input" value="${r.lc||''}" oninput="update(${i}, 'lc', this.value)"></td>
-                    <td class="p-2"><input type="date" class="grid-input" value="${r.calDate||''}" oninput="update(${i}, 'calDate', this.value)"></td>
-                    <td class="p-2"><input type="text" class="grid-input" value="${r.location||''}" oninput="update(${i}, 'location', this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input font-bold" value="${r.name||''}" oninput="upd(${i}, 'name', this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${r.make||''}" oninput="upd(${i}, 'make', this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${r.model||''}" oninput="upd(${i}, 'model', this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${r.srNo||''}" oninput="upd(${i}, 'srNo', this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input text-indigo-600 font-bold" value="${r.idNo||''}" oninput="upd(${i}, 'idNo', this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${r.range||''}" oninput="upd(${i}, 'range', this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${r.lc||''}" oninput="upd(${i}, 'lc', this.value)"></td>
+                    <td class="p-2"><input type="date" class="grid-input" value="${r.calDate||''}" oninput="upd(${i}, 'calDate', this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${r.location||''}" oninput="upd(${i}, 'location', this.value)"></td>
                     <td class="p-2 flex gap-1 justify-center mt-1">
                         <div class="flex flex-col gap-1">
-                             <button onclick="moveRow(${i}, 'up')" class="p-1 bg-slate-100 text-slate-400 rounded hover:bg-indigo-600 hover:text-white transition-all"><i data-lucide="chevron-up" class="w-3 h-3"></i></button>
-                             <button onclick="moveRow(${i}, 'down')" class="p-1 bg-slate-100 text-slate-400 rounded hover:bg-indigo-600 hover:text-white transition-all"><i data-lucide="chevron-down" class="w-3 h-3"></i></button>
+                             <button onclick="move(${i}, 'up')" class="p-1 bg-slate-100 rounded hover:bg-indigo-600 hover:text-white"><i data-lucide="chevron-up" class="w-3 h-3"></i></button>
+                             <button onclick="move(${i}, 'down')" class="p-1 bg-slate-100 rounded hover:bg-indigo-600 hover:text-white"><i data-lucide="chevron-down" class="w-3 h-3"></i></button>
                         </div>
-                        <button onclick="delRow(${i})" class="p-3 text-red-400 hover:bg-red-50 rounded-xl transition-all"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        <button onclick="del(${i})" class="p-3 text-red-400 hover:bg-red-50 rounded-xl"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </td>
                 </tr>
             `).join('');
@@ -201,54 +167,28 @@
 
         window.submitLot = async () => {
             const valid = gridData.filter(r => r.name && r.idNo);
-            if(!valid.length) return alert("Pehle Name aur ID No bharein!");
+            if(!valid.length) return alert("Pehle Name aur ID bharein!");
             
-            const btn = document.getElementById('subBtn');
-            btn.disabled = true; btn.innerText = "Saving...";
-            
-            const prefix = document.getElementById('srfPrefix').value || 'R1/--';
-            const lot = document.getElementById('srfLotNo').value || '--';
-            const fullSrf = `${prefix}/${lot}`;
-
+            const fullSrf = `${document.getElementById('srfPrefix').value}/${document.getElementById('srfLotNo').value}`;
             const items = valid.map((r, i) => ({ ...r, jobNo: `${fullSrf}/${i+1}` }));
-            const payload = { 
-                srfId: fullSrf, 
-                companyName, 
-                userEmail, 
-                items, 
-                total: items.length, 
-                updatedAt: serverTimestamp() 
-            };
+            
+            const payload = { srfId: fullSrf, companyName: compName, userEmail: email, items, total: items.length, updatedAt: serverTimestamp() };
             
             try {
-                if(existingDocId) {
-                    await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots', existingDocId), payload, { merge: true });
-                    alert("SRF Updated Successfully! ✅");
+                if(docId) {
+                    await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots', docId), payload, { merge: true });
                 } else {
                     payload.createdAt = serverTimestamp();
                     await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots'), payload);
-                    alert("New SRF Submitted! ✅");
                 }
+                alert("Data Saved Successfully! ✅");
                 goBack();
-            } catch(e) { 
-                alert("Error: " + e.message); 
-                btn.disabled = false; 
-                btn.innerText = "Save Changes";
-            }
+            } catch(e) { alert("Saving Failed!"); }
         };
 
-        window.goBack = () => { 
-            window.location.href = userEmail.startsWith('admin') ? 'admin.html' : 'dashboard.html'; 
-        };
-
-        function hideLoader() {
-            const loader = document.getElementById('screenLoader');
-            loader.classList.add('opacity-0');
-            setTimeout(() => loader.style.display = 'none', 300);
-        }
-
-        window.render = render;
-        window.update = update;
+        window.goBack = () => { window.location.href = email.startsWith('admin') ? 'admin.html' : 'dashboard.html'; };
+        function hideLoader() { document.getElementById('globalLoader').style.display = 'none'; }
+        window.upd = upd;
     </script>
 </body>
 </html>
