@@ -6,28 +6,16 @@
     <title>Master Admin | R1 Labs</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
-        body { font-family: 'Outfit', sans-serif; background: #f8fafc; }
-        .admin-card { border-left: 6px solid #4f46e5; }
-    </style>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;800&display=swap'); body { font-family: 'Outfit', sans-serif; background: #f8fafc; }</style>
 </head>
 <body class="p-4 md:p-8">
     <div class="max-w-7xl mx-auto">
-        <header class="bg-slate-900 text-white p-8 rounded-[2.5rem] flex justify-between items-center mb-10 shadow-2xl relative overflow-hidden">
-            <div class="relative z-10">
-                <h1 class="text-3xl font-black tracking-tighter uppercase">Master Dashboard</h1>
-                <p class="text-indigo-400 text-[10px] font-bold uppercase tracking-widest mt-1">Full Control Mode</p>
-            </div>
-            <button onclick="window.location.reload()" class="p-4 bg-indigo-600 hover:bg-indigo-500 rounded-3xl shadow-xl transition-all relative z-10"><i data-lucide="refresh-cw" class="w-6 h-6 text-white"></i></button>
+        <header class="bg-slate-900 text-white p-8 rounded-[2rem] flex justify-between items-center mb-10 shadow-2xl">
+            <div><h1 class="text-3xl font-black uppercase tracking-tighter">Master Dashboard</h1><p class="text-indigo-400 text-[10px] font-bold uppercase tracking-widest mt-1">Full Control</p></div>
+            <button onclick="window.location.reload()" class="p-4 bg-indigo-600 rounded-2xl"><i data-lucide="refresh-cw" class="w-6 h-6"></i></button>
         </header>
-
         <div id="masterList" class="space-y-8"></div>
-
-        <div id="loader" class="py-20 text-center text-slate-300">
-            <div class="w-14 h-14 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-            <p class="font-black uppercase tracking-widest text-xs">Connecting Cloud...</p>
-        </div>
+        <div id="loader" class="py-20 text-center"><div class="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto"></div></div>
     </div>
 
     <script type="module">
@@ -35,75 +23,36 @@
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { collection, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        onAuthStateChanged(auth, u => {
-            if(!u || !u.email.startsWith('admin')) { window.location.href = 'index.html'; }
-            fetchGlobalData();
-        });
+        onAuthStateChanged(auth, u => { if(!u || !u.email.startsWith('admin')) window.location.href = 'index.html'; fetch(); });
 
-        function fetchGlobalData() {
+        function fetch() {
             const ref = collection(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots');
             onSnapshot(ref, snap => {
-                const list = document.getElementById('masterList');
-                const loader = document.getElementById('loader');
-                list.innerHTML = '';
-                loader.classList.add('hidden');
-
+                const list = document.getElementById('masterList'), loader = document.getElementById('loader');
+                list.innerHTML = ''; loader.classList.add('hidden');
                 snap.docs.sort((a,b) => (b.data().createdAt?.seconds || 0) - (a.data().createdAt?.seconds || 0)).forEach(dSnap => {
-                    const l = dSnap.data();
-                    const lotId = dSnap.id;
-                    
+                    const l = dSnap.data(), id = dSnap.id;
                     const card = document.createElement('div');
-                    card.className = "bg-white p-8 rounded-[2.5rem] shadow-lg border border-slate-100 admin-card";
+                    card.className = "bg-white p-8 rounded-[2.5rem] shadow-lg border border-slate-100";
                     card.innerHTML = `
                         <div class="flex flex-col md:flex-row justify-between items-start border-b border-slate-50 pb-6 mb-6 gap-4">
-                            <div>
-                                <h2 class="text-3xl font-black text-indigo-600 tracking-tighter uppercase">${l.srfId}</h2>
-                                <p class="font-black text-slate-800 uppercase text-xs mt-1">${l.companyName}</p>
-                                <p class="text-[9px] text-slate-400 font-bold uppercase mt-1">${l.createdAt ? new Date(l.createdAt.toDate()).toLocaleString() : 'Saving'}</p>
-                            </div>
+                            <div><h2 class="text-3xl font-black text-indigo-600 uppercase tracking-tighter">${l.srfId}</h2><p class="font-black text-slate-800 text-xs mt-1 uppercase">${l.companyName}</p></div>
                             <div class="flex gap-2">
-                                <button onclick='exportSingleLot(${JSON.stringify(l)})' class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-sm hover:bg-emerald-700 transition-all">
-                                    <i data-lucide="download" class="w-4 h-4"></i> Excel
-                                </button>
-                                <button onclick="editLot('${lotId}')" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-sm hover:bg-indigo-800 transition-all">
-                                    <i data-lucide="edit-3" class="w-4 h-4"></i> Edit
-                                </button>
-                                <button onclick="deleteLot('${lotId}')" class="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 hover:bg-red-600 hover:text-white transition-all">
-                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                </button>
+                                <button onclick='exportExcel(${JSON.stringify(l)})' class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-sm"><i data-lucide="download" class="w-4 h-4"></i> Excel</button>
+                                <button onclick="edit('${id}')" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-sm"><i data-lucide="edit-3" class="w-4 h-4"></i> Edit</button>
+                                <button onclick="del('${id}')" class="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                             </div>
                         </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-[11px]">
-                                <thead class="bg-slate-50 text-slate-400 font-black uppercase tracking-widest">
-                                    <tr>
-                                        <th class="p-3">Job No</th><th class="p-3">Instrument</th><th class="p-3">ID No</th>
-                                        <th class="p-3">Range / LC</th><th class="p-3">Cal Date</th><th class="p-3">Location</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-50">
-                                    ${l.items.map(i => `
-                                        <tr>
-                                            <td class="p-3 font-mono font-black text-indigo-700">${i.jobNo}</td>
-                                            <td class="p-3 font-black text-slate-800 uppercase">${i.name}</td>
-                                            <td class="p-3 font-bold text-slate-500">${i.idNo}</td>
-                                            <td class="p-3 text-slate-400">${i.range} | ${i.lc || '-'}</td>
-                                            <td class="p-3 font-bold text-slate-300">${i.calDate || '-'}</td>
-                                            <td class="p-3 text-slate-400 font-medium italic">${i.location || '-'}</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    `;
+                        <div class="overflow-x-auto"><table class="w-full text-left text-[11px]"><thead class="text-slate-400 font-black uppercase"><tr><th class="p-3">Job No</th><th class="p-3">Instrument</th><th class="p-3">Range / LC</th><th class="p-3">Cal Date</th></tr></thead><tbody class="divide-y">${l.items.map(i => `<tr><td class="p-3 font-mono font-black text-indigo-700">${i.jobNo}</td><td class="p-3 font-black text-slate-800 uppercase">${i.name}</td><td class="p-3 text-slate-400 font-bold">${i.range} | ${i.lc || '-'}</td><td class="p-3 font-bold text-slate-300">${i.calDate || '-'}</td></tr>`).join('')}</tbody></table></div>`;
                     list.appendChild(card);
                 });
                 lucide.createIcons();
             });
         }
 
-        window.exportSingleLot = (lot) => {
-            let csv = "\ufeffLot No,Company,Job No,Instrument Name,Make,Model,Sr No,ID No,Range,LC,Cal Date,Location\n";
+        window.exportExcel = (lot) => {
+            // EXCEL CHARACTER FIX: Adding UTF-8 BOM (\uFEFF)
+            let csv = "\uFEFFLot No,Company,Job No,Instrument Name,Make,Model,Sr No,ID No,Range,LC,Cal Date,Location\n";
             lot.items.forEach(i => {
                 csv += `"${lot.srfId}","${lot.companyName}","${i.jobNo}","${i.name}","${i.make}","${i.model}","${i.srNo}","${i.idNo}","${i.range}","${i.lc}","${i.calDate}","${i.location}"\n`;
             });
@@ -114,17 +63,8 @@
             link.click();
         };
 
-        window.editLot = (id) => { window.location.href = `editor.html?id=${id}`; };
-        window.deleteLot = async (id) => {
-            if(confirm("Confirm Delete?")) {
-                try {
-                    await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots', id));
-                    alert("Deleted!");
-                } catch(e) { alert("Error: " + e.message); }
-            }
-        };
-
-        window.logout = () => signOut(auth).then(() => window.location.href = 'index.html');
+        window.edit = (id) => { window.location.href = `editor.html?id=${id}`; };
+        window.del = async (id) => { if(confirm("Confirm Delete?")) { try { await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots', id)); alert("Deleted!"); } catch(e) { alert("Error!"); } } };
     </script>
 </body>
 </html>
