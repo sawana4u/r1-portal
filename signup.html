@@ -72,7 +72,7 @@
 
             // Validation: Zaroori fields check kar rahe hain
             if(!signupData.comp || !signupData.addr || !signupData.user || !signupData.pass || !signupData.cName || !signupData.cPhone) {
-                alert("Kripya saare star (*) wale fields bharein!");
+                alert("All stared (*) Fields are mandaratory !");
                 return;
             }
 
@@ -103,12 +103,12 @@
                 // 2. Admin ki public list mein data sync kar rahe hain
                 await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'customers', cred.user.uid), profileData);
 
-                alert("Account successfully ban gaya hai! ✅");
+                alert("Account created successfully! ✅");
                 window.location.href = 'dashboard.html';
             } catch (e) {
                 alert("Registration Error: " + e.message);
                 btn.disabled = false;
-                btn.innerText = "Account Register Karein";
+                btn.innerText = "Register an account";
             }
         };
     </script>
