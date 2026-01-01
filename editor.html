@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRF Entry | R1 Labs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .grid-input { width: 100%; padding: 8px; border: 1px solid #e2e8f0; font-size: 12px; outline: none; border-radius: 4px; }
+        .sticky-col { position: sticky; left: 0; background: #fff; z-index: 10; border-right: 2px solid #f1f5f9; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col">
+    <header class="bg-white border-b p-4 flex justify-between items-center shadow-sm">
+        <div class="flex items-center gap-4">
+            <a href="dashboard.html" class="p-2 bg-slate-100 rounded-lg"><i data-lucide="chevron-left" class="w-5 h-5"></i></a>
+            <h2 id="srfIdLabel" class="text-lg font-black text-slate-800 uppercase">R1/2601/CX</h2>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="addRow()" class="px-4 py-2 border-2 border-indigo-600 text-indigo-600 text-xs font-black rounded-xl">Add Row</button>
+            <button onclick="submitLot()" id="subBtn" class="px-6 py-2 bg-indigo-600 text-white text-xs font-black rounded-xl shadow-lg">Submit Lot</button>
+        </div>
+    </header>
+
+    <div class="flex-grow overflow-auto p-4">
+        <div class="bg-white rounded-3xl border overflow-hidden min-w-[1700px]">
+            <table class="w-full text-left">
+                <thead class="bg-slate-900 text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                    <tr>
+                        <th class="p-4 sticky-col w-[160px] text-center">Job No.</th>
+                        <th class="p-4 w-[250px]">Instrument Name *</th>
+                        <th class="p-4 w-[150px]">Make</th>
+                        <th class="p-4 w-[150px]">Model</th>
+                        <th class="p-4 w-[150px]">Serial No.</th>
+                        <th class="p-4 w-[150px]">ID No. *</th>
+                        <th class="p-4 w-[120px]">Range</th>
+                        <th class="p-4 w-[100px]">L.C.</th>
+                        <th class="p-4 w-[150px]">Cal Date</th>
+                        <th class="p-4 w-[150px]">Location</th>
+                        <th class="p-4 w-[100px] text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="gridBody" class="divide-y"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script type="module">
+        import { auth, db, APP_ID } from './config.js';
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { collection, getDocs, addDoc, serverTimestamp, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        let user = null, activeSRF = "", gridData = [], companyName = "";
+
+        onAuthStateChanged(auth, async u => {
+            if(!u) window.location.href = 'index.html';
+            user = u;
+            const p = await getDoc(doc(db, 'artifacts', APP_ID, 'users', u.uid, 'settings', 'profile'));
+            companyName = p.exists() ? p.data().companyName : "Client";
+            generateSrfId();
+            lucide.createIcons();
+        });
+
+        async function generateSrfId() {
+            const now = new Date(), yy = now.getFullYear().toString().slice(-2), mm = (now.getMonth() + 1).toString().padStart(2, '0');
+            const snap = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots'));
+            activeSRF = `R1/${yy}${mm}/C${snap.size + 1}`;
+            document.getElementById('srfIdLabel').innerText = activeSRF;
+            gridData = [{ id: Date.now(), name: '', make: '', model: '', srNo: '', idNo: '', range: '', lc: '', calDate: '', location: '' }];
+            render();
+        }
+
+        window.addRow = () => { gridData.push({ id: Date.now(), name: '', make: '', model: '', srNo: '', idNo: '', range: '', lc: '', calDate: '', location: '' }); render(); };
+        window.copyRow = (idx) => { gridData.splice(idx+1, 0, {...gridData[idx], id: Date.now()}); render(); };
+        window.delRow = (idx) => { if(gridData.length > 1) { gridData.splice(idx,1); render(); } };
+        window.update = (i, k, v) => { gridData[i][k] = v; };
+
+        function render() {
+            const body = document.getElementById('gridBody');
+            body.innerHTML = gridData.map((r, i) => `
+                <tr class="hover:bg-slate-50">
+                    <td class="p-4 sticky-col text-center font-mono font-black text-indigo-600 text-[10px]">${activeSRF}/${i + 1}</td>
+                    <td class="p-2"><input type="text" class="grid-input font-bold" value="${r.name}" oninput="update(${i}, 'name', this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${r.make}" oninput="update(${i}, 'make', this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${r.model}" oninput="update(${i}, 'model', this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${r.srNo}" oninput="update(${i}, 'srNo', this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input text-indigo-600 font-bold" value="${r.idNo}" oninput="update(${i}, 'idNo', this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${r.range}" oninput="update(${i}, 'range', this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${r.lc}" oninput="update(${i}, 'lc', this.value)"></td>
+                    <td class="p-2"><input type="date" class="grid-input" value="${r.calDate}" oninput="update(${i}, 'calDate', this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${r.location}" oninput="update(${i}, 'location', this.value)"></td>
+                    <td class="p-2 flex gap-1 justify-center mt-1">
+                        <button onclick="copyRow(${i})" class="p-2 text-blue-500 hover:bg-blue-50 rounded-lg"><i data-lucide="copy" class="w-4 h-4"></i></button>
+                        <button onclick="delRow(${i})" class="p-2 text-red-400 hover:bg-red-50 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        window.submitLot = async () => {
+            const valid = gridData.filter(r => r.name && r.idNo);
+            if(!valid.length) return alert("Kam se kam 1 item bharein!");
+            const items = valid.map((r, i) => ({ ...r, jobNo: `${activeSRF}/${i+1}` }));
+            await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots'), { srfId: activeSRF, companyName, userEmail: user.email, items, total: items.length, createdAt: serverTimestamp() });
+            alert("Lot Submitted! ✅");
+            window.location.href = 'dashboard.html';
+        };
+
+        window.update = update;
+    </script>
+</body>
+</html>
+

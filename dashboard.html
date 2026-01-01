@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | R1 Labs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-100 min-h-screen">
+    <header class="bg-slate-900 p-6 text-white flex justify-between items-center shadow-xl">
+        <h1 class="font-black uppercase tracking-tighter">R1 Dashboard</h1>
+        <button onclick="signOut()" class="bg-slate-800 p-2 rounded-xl border border-slate-700"><i data-lucide="log-out" class="w-4 h-4"></i></button>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-6">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-2xl font-black">My Lots</h2>
+            <a href="editor.html" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black text-xs uppercase shadow-xl">+ New SRF Lot</a>
+        </div>
+        <div id="lotList" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+    </main>
+
+    <script type="module">
+        import { auth, db, APP_ID } from './config.js';
+        import { onAuthStateChanged, signOut as firebaseSignOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { collection, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        onAuthStateChanged(auth, u => {
+            if(!u) window.location.href = 'index.html';
+            fetchHistory(u.email);
+            lucide.createIcons();
+        });
+
+        function fetchHistory(email) {
+            const ref = collection(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots');
+            onSnapshot(ref, snap => {
+                const list = document.getElementById('lotList'); list.innerHTML = '';
+                snap.docs.filter(d => d.data().userEmail === email).forEach(d => {
+                    const l = d.data();
+                    list.innerHTML += `
+                        <div class="bg-white p-6 rounded-[2rem] border-2 border-slate-50 shadow-sm">
+                            <h3 class="text-xl font-black text-slate-800">${l.srfId}</h3>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase mt-1 mb-4">${l.createdAt ? new Date(l.createdAt.toDate()).toLocaleDateString() : 'Syncing'}</p>
+                            <div class="bg-slate-50 p-4 rounded-2xl text-sm font-black text-slate-700">${l.total} Instruments</div>
+                        </div>`;
+                });
+            });
+        }
+        window.signOut = () => firebaseSignOut(auth);
+    </script>
+</body>
+</html>
+
