@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SRF Smart Editor | R1 Tech Labs</title>
+    <title>SRF Editor | R1 Tech Labs</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -16,15 +16,16 @@
         .btn-action { transition: all 0.2s; display: flex; align-items: center; gap: 8px; font-weight: 800; text-transform: uppercase; font-size: 10px; padding: 10px 16px; border-radius: 12px; }
         .control-btn { padding: 6px; border-radius: 8px; transition: all 0.2s; color: #94a3b8; }
         .control-btn:hover { background-color: #f1f5f9; color: #4f46e5; }
-        .admin-only { background-color: #fff7ed; border-color: #ffedd5; }
+        .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- Page Loader -->
+    <!-- Page Loading Indicator -->
     <div id="pageLoader" class="fixed inset-0 bg-white z-[500] flex flex-col items-center justify-center">
         <div class="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-        <p class="mt-4 text-slate-500 font-bold text-xs uppercase tracking-widest">Initialising Smart Engine...</p>
+        <p class="mt-4 text-slate-500 font-bold text-xs uppercase tracking-widest">Loading Editor...</p>
     </div>
 
     <!-- Navigation Header -->
@@ -39,30 +40,29 @@
                 <input type="text" id="srfLotNo" class="bg-indigo-50 border-2 border-indigo-200 p-2 rounded-lg text-xs font-black w-20 text-center text-indigo-600 uppercase" placeholder="Lot">
             </div>
             
-            <!-- Company Display (Admin can edit, Customer can't) -->
             <div id="companyBox" class="ml-4 px-4 py-2 bg-slate-50 rounded-xl border border-slate-100">
-                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Service Provider</p>
-                <h2 id="displayCompName" class="text-xs font-black text-slate-700 uppercase">Loading Client...</h2>
+                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Client Name</p>
+                <h2 id="displayCompName" class="text-xs font-black text-slate-700 uppercase italic">Loading...</h2>
             </div>
         </div>
 
         <div class="flex gap-2">
             <button onclick="addRow()" class="btn-action border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50">
-                <i data-lucide="plus" class="w-4 h-4"></i> Add Item
+                <i data-lucide="plus" class="w-4 h-4"></i> Add Row
             </button>
             <button onclick="submitLot()" id="subBtn" class="btn-action bg-indigo-600 text-white shadow-xl hover:bg-indigo-700 px-10">
-                <i data-lucide="save" class="w-4 h-4"></i> <span id="saveBtnText">Save SRF</span>
+                <i data-lucide="save" class="w-4 h-4"></i> Save SRF
             </button>
         </div>
     </header>
 
-    <!-- Master Site Selection -->
+    <!-- Address Selection Section -->
     <section class="bg-slate-900 p-6 text-white shadow-inner">
         <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
             <div class="space-y-2">
-                <label class="text-[10px] font-black uppercase tracking-widest opacity-50">Select Delivery Site / location</label>
+                <label class="text-[10px] font-black uppercase tracking-widest opacity-50">Select Site / Location</label>
                 <select id="siteSelect" onchange="handleSiteSelect()" class="w-full p-3.5 bg-slate-800 border border-slate-700 rounded-xl text-sm font-bold outline-none focus:border-indigo-500 transition-all">
-                    <option value="">-- Choose Target Location --</option>
+                    <option value="">-- Select Address --</option>
                 </select>
             </div>
             
@@ -70,22 +70,22 @@
                 <div class="flex items-start gap-3">
                     <i data-lucide="map-pin" class="w-4 h-4 text-indigo-400 mt-1"></i>
                     <div>
-                        <p class="text-[10px] font-black uppercase text-indigo-400">Site Information</p>
-                        <p id="displayAddress" class="text-xs font-bold text-slate-300 mt-1 italic">Please select a location to continue...</p>
+                        <p class="text-[10px] font-black uppercase text-indigo-400">Site Address Details</p>
+                        <p id="displayAddress" class="text-xs font-bold text-slate-300 mt-1 italic">Address will appear here after selection...</p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Instrument Grid -->
+    <!-- Spreadsheet Grid -->
     <main class="flex-grow overflow-auto p-4 custom-scrollbar">
         <div class="bg-white rounded-3xl border shadow-2xl overflow-hidden min-w-[1750px]">
             <table class="w-full text-left border-collapse">
                 <thead class="bg-slate-900 text-[10px] text-slate-400 font-black uppercase tracking-widest border-b border-slate-800">
                     <tr>
                         <th class="p-5 sticky-col w-[60px] text-center">Sr.</th>
-                        <th class="p-5 w-[280px]">Instrument Description *</th>
+                        <th class="p-5 w-[280px]">Instrument Name *</th>
                         <th class="p-5 w-[150px]">Make</th>
                         <th class="p-5 w-[150px]">Model</th>
                         <th class="p-5 w-[180px]">Serial No.</th>
@@ -107,92 +107,114 @@
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { collection, setDoc, doc, getDoc, addDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        let user = null, isAdmin = false, gridData = [], docId = null, targetProfile = {};
+        let user = null, isAdmin = false, gridData = [], docId = null, targetProfile = {}, existingAddr = "";
         const params = new URLSearchParams(window.location.search);
-        docId = params.get('id'); // For editing existing SRF
-        const cid = params.get('cid'); // Admin selects client first
+        docId = params.get('id');
+        const cid = params.get('cid'); // For Admin creating for specific client
 
         onAuthStateChanged(auth, async (u) => {
             if(!u) { window.location.href = 'index.html'; return; }
             user = u;
             isAdmin = u.email.startsWith('admin');
 
-            if(isAdmin) {
-                // Admin Mode: Load selected client profile
-                if(cid) await fetchTargetProfile(cid);
-                else if(docId) await fetchLotAndProfile(docId);
-                else { alert("Admin must select a client first!"); window.location.href = 'admin.html'; }
-            } else {
-                // Customer Mode: Load own profile
-                await fetchTargetProfile(u.uid, true);
+            // Business Profile Load Logic
+            if(isAdmin && cid) {
+                await fetchProfile(cid, false);
+            } else if(!isAdmin) {
+                await fetchProfile(u.uid, true);
+            } else if(isAdmin && docId) {
+                await fetchByLotId(docId);
             }
 
-            if(docId) await loadExistingLotData(docId);
-            else await setupNewSRF();
+            if(docId) await loadLot(docId);
+            else await setupNew();
             
             document.getElementById('pageLoader').style.display = 'none';
         });
 
-        // --- DATA FETCHING ---
-
-        async function fetchTargetProfile(uid, isOwn = false) {
-            const path = isOwn ? doc(db, 'artifacts', APP_ID, 'users', uid, 'settings', 'profile') : doc(db, 'artifacts', APP_ID, 'public', 'data', 'customers', uid);
+        async function fetchProfile(id, isSelf) {
+            const path = isSelf ? 
+                doc(db, 'artifacts', APP_ID, 'users', id, 'settings', 'profile') : 
+                doc(db, 'artifacts', APP_ID, 'public', 'data', 'customers', id);
+            
             const snap = await getDoc(path);
             if(snap.exists()) {
                 targetProfile = snap.data();
                 document.getElementById('displayCompName').innerText = targetProfile.companyName;
-                populateSiteDropdown(targetProfile.allSites || []);
+                fillDropdown();
             }
         }
 
-        async function fetchLotAndProfile(id) {
+        async function fetchByLotId(id) {
             const lotSnap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots', id));
             if(lotSnap.exists()) {
-                const lotData = lotSnap.data();
-                // Admin needs to find the customer document to get all sites
-                const custSnap = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'customers'));
-                const customer = custSnap.docs.find(d => d.data().companyName === lotData.companyName);
-                if(customer) {
-                    targetProfile = customer.data();
+                const lData = lotSnap.data();
+                existingAddr = lData.endCustomerAddress;
+                const cSnap = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'customers'));
+                const client = cSnap.docs.find(d => d.data().companyName === lData.companyName);
+                if(client) {
+                    targetProfile = client.data();
                     document.getElementById('displayCompName').innerText = targetProfile.companyName;
-                    populateSiteDropdown(targetProfile.allSites || []);
+                    fillDropdown();
                 }
             }
         }
 
-        function populateSiteDropdown(sites) {
+        function fillDropdown() {
             const select = document.getElementById('siteSelect');
-            select.innerHTML = `<option value="">-- Choose From Registered Sites --</option>`;
-            sites.forEach((s, idx) => {
-                const opt = document.createElement('option');
-                opt.value = idx;
-                opt.dataset.addr = s.siteAddress;
-                opt.dataset.gst = s.gstNo;
-                opt.innerText = `Site: ${s.siteAddress.substring(0, 40)}...`;
-                select.appendChild(opt);
-            });
+            select.innerHTML = `<option value="">-- Choose From Saved Addresses --</option>`;
+            
+            // Primary Address
+            const mainOpt = document.createElement('option');
+            mainOpt.value = "main";
+            mainOpt.dataset.addr = targetProfile.billingAddress || targetProfile.address;
+            mainOpt.innerText = "Main Billing Site";
+            select.appendChild(mainOpt);
+
+            // Other Site Addresses
+            if(targetProfile.allSites && targetProfile.allSites.length > 0) {
+                targetProfile.allSites.forEach((s, i) => {
+                    const opt = document.createElement('option');
+                    opt.value = `site_${i}`;
+                    opt.dataset.addr = s.siteAddress;
+                    opt.dataset.gst = s.gstNo;
+                    opt.innerText = `Site Address ${i+1}: ${s.siteAddress.substring(0, 30)}...`;
+                    select.appendChild(opt);
+                });
+            }
+
+            // Auto-select for edits
+            if(existingAddr) {
+                for(let i=0; i < select.options.length; i++){
+                    if(select.options[i].dataset.addr === existingAddr){
+                        select.selectedIndex = i;
+                        handleSiteSelect();
+                        break;
+                    }
+                }
+            }
         }
 
         window.handleSiteSelect = () => {
             const select = document.getElementById('siteSelect');
             const display = document.getElementById('displayAddress');
             const opt = select.options[select.selectedIndex];
-            display.innerText = opt.value !== "" ? opt.dataset.addr : "Please select a location to continue...";
+            display.innerText = opt.value !== "" ? opt.dataset.addr : "Address will appear here after selection...";
         }
 
-        async function loadExistingLotData(id) {
+        async function loadLot(id) {
             const snap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots', id));
             if(snap.exists()) {
-                const data = snap.data();
-                const p = data.srfId.split('/');
+                const d = snap.data();
+                const p = d.srfId.split('/');
                 document.getElementById('srfPrefix').value = p[0] + '/' + p[1];
                 document.getElementById('srfLotNo').value = p[2];
-                gridData = data.items || [];
+                gridData = d.items || [];
                 render();
             }
         }
 
-        async function setupNewSRF() {
+        async function setupNew() {
             const now = new Date(), yy = now.getFullYear().toString().slice(-2), mm = (now.getMonth() + 1).toString().padStart(2, '0');
             document.getElementById('srfPrefix').value = `R1/${yy}${mm}`;
             const snap = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots'));
@@ -201,36 +223,33 @@
             render();
         }
 
-        // --- GRID LOGIC ---
-
+        // --- Grid Operations ---
         window.addRow = () => { gridData.push({ name: '', make: '', model: '', srNo: '', idNo: '', range: '', lc: '', calDate: '', location: '' }); render(); };
         window.duplicateRow = (i) => { gridData.splice(i + 1, 0, { ...gridData[i] }); render(); };
-        window.moveRow = (i, dir) => {
-            const target = i + dir;
-            if(target < 0 || target >= gridData.length) return;
-            [gridData[i], gridData[target]] = [gridData[target], gridData[i]];
-            render();
+        window.moveRow = (i, d) => {
+            const t = i + d; if(t < 0 || t >= gridData.length) return;
+            [gridData[i], gridData[t]] = [gridData[t], gridData[i]]; render();
         };
-        window.del = (i) => { if(confirm("Remove this item?")) { gridData.splice(i,1); render(); } };
+        window.del = (i) => { if(confirm("Remove item?")) { gridData.splice(i,1); render(); } };
         window.upd = (i, k, v) => { gridData[i][k] = v; };
 
         function render() {
             const body = document.getElementById('gridBody');
             body.innerHTML = gridData.map((r, i) => `
-                <tr class="hover:bg-slate-50 transition-all border-b">
-                    <td class="p-4 sticky-col text-center font-bold text-slate-300 text-[11px]">${i + 1}</td>
-                    <td class="p-2"><input type="text" class="grid-input font-bold" value="${r.name||''}" oninput="upd(${i}, 'name', this.value)"></td>
-                    <td class="p-2"><input type="text" class="grid-input" value="${r.make||''}" oninput="upd(${i}, 'make', this.value)"></td>
-                    <td class="p-2"><input type="text" class="grid-input" value="${r.model||''}" oninput="upd(${i}, 'model', this.value)"></td>
-                    <td class="p-2"><input type="text" class="grid-input" value="${r.srNo||''}" oninput="upd(${i}, 'srNo', this.value)"></td>
-                    <td class="p-2"><input type="text" class="grid-input text-indigo-600 font-bold" value="${r.idNo||''}" oninput="upd(${i}, 'idNo', this.value)"></td>
-                    <td class="p-2"><input type="text" class="grid-input" value="${r.range||''}" oninput="upd(${i}, 'range', this.value)"></td>
-                    <td class="p-2"><input type="text" class="grid-input" value="${r.lc||''}" oninput="upd(${i}, 'lc', this.value)"></td>
-                    <td class="p-2"><input type="date" class="grid-input" value="${r.calDate||''}" oninput="upd(${i}, 'calDate', this.value)"></td>
-                    <td class="p-2"><input type="text" class="grid-input" value="${r.location||''}" oninput="upd(${i}, 'location', this.value)"></td>
+                <tr class="hover:bg-slate-50 border-b">
+                    <td class="p-4 sticky-col text-center font-bold text-slate-300 text-[11px]">${i+1}</td>
+                    <td class="p-2"><input type="text" class="grid-input font-bold" value="${r.name||''}" oninput="upd(${i},'name',this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${r.make||''}" oninput="upd(${i},'make',this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${r.model||''}" oninput="upd(${i},'model',this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${r.srNo||''}" oninput="upd(${i},'srNo',this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input text-indigo-600 font-bold" value="${r.idNo||''}" oninput="upd(${i},'idNo',this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${r.range||''}" oninput="upd(${i},'range',this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${r.lc||''}" oninput="upd(${i},'lc',this.value)"></td>
+                    <td class="p-2"><input type="date" class="grid-input" value="${r.calDate||''}" oninput="upd(${i},'calDate',this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${r.location||''}" oninput="upd(${i},'location',this.value)"></td>
                     <td class="p-2 flex justify-center gap-1">
-                        <button onclick="moveRow(${i}, -1)" class="control-btn"><i data-lucide="arrow-up" class="w-4 h-4"></i></button>
-                        <button onclick="moveRow(${i}, 1)" class="control-btn"><i data-lucide="arrow-down" class="w-4 h-4"></i></button>
+                        <button onclick="moveRow(${i},-1)" class="control-btn"><i data-lucide="arrow-up" class="w-4 h-4"></i></button>
+                        <button onclick="moveRow(${i},1)" class="control-btn"><i data-lucide="arrow-down" class="w-4 h-4"></i></button>
                         <button onclick="duplicateRow(${i})" class="control-btn"><i data-lucide="copy" class="w-4 h-4"></i></button>
                         <button onclick="del(${i})" class="control-btn hover:text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </td>
@@ -240,38 +259,39 @@
 
         window.submitLot = async () => {
             const valid = gridData.filter(r => r.name && r.idNo);
-            if(!valid.length) return alert("Fill mandatory fields!");
+            if(!valid.length) return alert("Please fill Instrument Name and ID No!");
             
             const select = document.getElementById('siteSelect');
             const opt = select.options[select.selectedIndex];
-            if(!opt.value) return alert("Select a delivery location!");
+            if(!opt.value) return alert("Please select the Target Delivery Location!");
 
             const btn = document.getElementById('subBtn');
             btn.disabled = true; btn.innerText = "SAVING...";
 
-            const fullSrf = `${document.getElementById('srfPrefix').value}/${document.getElementById('srfLotNo').value}`;
-            const items = valid.map((r, i) => ({ ...r, jobNo: `${fullSrf}/${i+1}` }));
+            const srfId = `${document.getElementById('srfPrefix').value}/${document.getElementById('srfLotNo').value}`;
+            const items = valid.map((r, i) => ({ ...r, jobNo: `${srfId}/${i+1}` }));
             
             const payload = { 
-                srfId: fullSrf, 
+                srfId, 
                 companyName: targetProfile.companyName, 
-                address: targetProfile.address || opt.dataset.addr, 
+                address: targetProfile.billingAddress || targetProfile.address, 
                 gstNo: opt.dataset.gst || targetProfile.gstNo || '',
                 endCustomerName: targetProfile.companyName, 
                 endCustomerAddress: opt.dataset.addr, 
-                userEmail: isAdmin ? targetProfile.officialEmail || 'admin-entry' : user.email, 
+                locationLabel: opt.text, // Saving the site label (e.g., Site 1)
+                userEmail: isAdmin ? (targetProfile.officialEmail || 'admin-entry') : user.email, 
                 items, total: items.length, updatedAt: serverTimestamp() 
             };
             
             try {
                 if(docId) await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots', docId), payload, { merge: true });
                 else { payload.createdAt = serverTimestamp(); await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots'), payload); }
-                alert("SRF Record Locked & Saved! ✅"); 
+                alert("SRF Saved Successfully! ✅"); 
                 window.location.href = isAdmin ? 'admin.html' : 'dashboard.html';
-            } catch(e) { alert("Save Failed."); btn.disabled = false; btn.innerText = "Save SRF"; }
+            } catch(e) { alert("Error saving."); btn.disabled = false; }
         };
 
-        // Standard helpers
+        // Excel functions
         window.importExcel = (e) => {
             const file = e.target.files[0];
             const reader = new FileReader();
@@ -293,4 +313,5 @@
     </script>
 </body>
 </html>
+
 
