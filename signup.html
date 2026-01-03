@@ -3,118 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register | R1 Tech Labs</title>
+    <title>Sign Up | R1 Tech Labs</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
         body { font-family: 'Outfit', sans-serif; background-color: #f8fafc; }
-        .form-input { width: 100%; padding: 1rem; background-color: #f1f5f9; border: 2px solid transparent; border-radius: 1rem; outline: none; transition: all 0.2s; font-size: 0.875rem; }
-        .form-input:focus { border-color: #4f46e5; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
-
-    <div class="w-full max-w-2xl bg-white p-8 md:p-12 rounded-[2.5rem] shadow-2xl border border-slate-100 my-8">
-        <div class="text-center mb-8">
-            <h1 class="text-2xl font-black uppercase text-slate-900 tracking-tight">R1 Tech Labs</h1>
-            <p class="text-[10px] font-bold text-indigo-600 uppercase tracking-[0.3em] mt-2">New Customer Registration</p>
-        </div>
+<body class="bg-slate-50 flex items-center justify-center min-h-screen p-6">
+    <div class="w-full max-w-md bg-white p-10 rounded-[2.5rem] shadow-2xl relative border border-slate-100">
         
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <!-- Company Details Section -->
-            <div class="md:col-span-2">
-                <p class="text-[10px] font-black uppercase text-slate-400 mb-3 ml-1 tracking-widest">Company Information</p>
-                <input type="text" id="comp" class="form-input mb-4" placeholder="Full Company Name *">
-                <textarea id="addr" class="form-input h-24 mb-4" placeholder="Physical Office Address *"></textarea>
-                <input type="text" id="gst" class="form-input" placeholder="GST Number (Optional)">
-            </div>
-
-            <!-- Contact Person Section -->
-            <div class="md:col-span-2 mt-2">
-                <p class="text-[10px] font-black uppercase text-slate-400 mb-3 ml-1 tracking-widest">Contact Person Details</p>
-            </div>
-            <input type="text" id="cName" class="form-input" placeholder="Person Name *">
-            <input type="text" id="cDesig" class="form-input" placeholder="Designation">
-            <input type="text" id="cPhone" class="form-input" placeholder="Mobile Number *">
-            <input type="email" id="cEmail" class="form-input" placeholder="Official Email *">
-
-            <!-- Security Section -->
-            <div class="md:col-span-2 mt-2">
-                <p class="text-[10px] font-black uppercase text-slate-400 mb-3 ml-1 tracking-widest">Login Credentials</p>
-            </div>
-            <input type="text" id="user" class="form-input" placeholder="Choose Username *">
-            <input type="password" id="pass" class="form-input" placeholder="Set Password *">
+        <div class="text-center mb-10">
+            <h1 class="text-3xl font-black uppercase text-indigo-600 tracking-tighter">R1 Tech Labs</h1>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-2">Create New Account</p>
         </div>
 
-        <button onclick="handleSignup()" id="signupBtn" class="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl uppercase text-xs mt-10 shadow-xl hover:bg-indigo-700 active:scale-[0.98] transition-all">Create Account</button>
-        
-        <p class="text-center text-xs text-slate-400 mt-6">Already have an account? <a href="index.html" class="text-indigo-600 font-bold hover:underline">Sign In</a></p>
+        <!-- Signup Form (Step 1) -->
+        <div class="space-y-6">
+            <div>
+                <label class="text-[10px] font-black text-slate-400 uppercase ml-2 mb-1 block">Choose Username *</label>
+                <input type="text" id="username" class="w-full p-4 bg-slate-50 border-2 border-transparent rounded-2xl outline-none focus:border-indigo-500 focus:bg-white transition-all font-bold" placeholder="e.g. jameel_tech">
+            </div>
+            <div>
+                <label class="text-[10px] font-black text-slate-400 uppercase ml-2 mb-1 block">Set Password *</label>
+                <input type="password" id="password" class="w-full p-4 bg-slate-50 border-2 border-transparent rounded-2xl outline-none focus:border-indigo-500 focus:bg-white transition-all" placeholder="••••••••">
+            </div>
+            
+            <button onclick="handleSignup()" id="signupBtn" class="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-indigo-100 uppercase tracking-widest text-xs active:scale-95 transition-all mt-4 flex items-center justify-center gap-2">
+                Continue to Profile <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+
+            <div class="text-center pt-4">
+                <p class="text-xs text-slate-400">Already registered? <a href="index.html" class="text-indigo-600 font-bold hover:underline">Sign In</a></p>
+            </div>
+        </div>
     </div>
 
     <script type="module">
-        import { auth, db, APP_ID, DOMAIN } from './config.js';
+        import { auth, DOMAIN } from './config.js';
         import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         window.handleSignup = async () => {
-            const signupData = {
-                comp: document.getElementById('comp').value.trim(),
-                addr: document.getElementById('addr').value.trim(),
-                gst: document.getElementById('gst').value.trim(),
-                cName: document.getElementById('cName').value.trim(),
-                cDesig: document.getElementById('cDesig').value.trim(),
-                cPhone: document.getElementById('cPhone').value.trim(),
-                cEmail: document.getElementById('cEmail').value.trim(),
-                user: document.getElementById('user').value.trim().toLowerCase(),
-                pass: document.getElementById('pass').value
-            };
-
-            // SECURITY: Block 'admin' keyword from usernames
-            if (signupData.user.includes('admin')) {
-                alert("Security Alert: Usernames containing 'admin' are not allowed.");
-                return;
-            }
-
-            if(!signupData.comp || !signupData.addr || !signupData.user || !signupData.pass || !signupData.cName || !signupData.cPhone) {
-                alert("Please fill all required fields!");
-                return;
-            }
-
+            const user = document.getElementById('username').value.trim().toLowerCase();
+            const pass = document.getElementById('password').value;
             const btn = document.getElementById('signupBtn');
+
+            if(!user || !pass) { alert("Please set a username and password."); return; }
+            if(user.includes('admin')) { alert("Reserved keyword 'admin' not allowed."); return; }
+
             btn.disabled = true;
-            btn.innerText = "Registering...";
+            btn.innerText = "Creating Account...";
 
             try {
-                const email = signupData.user + DOMAIN;
-                const cred = await createUserWithEmailAndPassword(auth, email, signupData.pass);
-                
-                const profileData = {
-                    companyName: signupData.comp,
-                    address: signupData.addr,
-                    gstNo: signupData.gst,
-                    contactPerson: signupData.cName,
-                    designation: signupData.cDesig,
-                    phone: signupData.cPhone,
-                    officialEmail: signupData.cEmail,
-                    username: signupData.user,
-                    role: 'customer'
-                };
-
-                // Save to private user folder
-                await setDoc(doc(db, 'artifacts', APP_ID, 'users', cred.user.uid, 'settings', 'profile'), profileData);
-                // Sync to public directory for Admin view
-                await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'customers', cred.user.uid), profileData);
-
-                alert("Registration Successful! ✅");
-                window.location.href = 'dashboard.html';
+                const email = user + DOMAIN;
+                await createUserWithEmailAndPassword(auth, email, pass);
+                // Step 1 success -> Redirect to Profile Setup (Step 2)
+                window.location.href = 'create_client.html';
             } catch (e) {
                 alert("Error: " + e.message);
                 btn.disabled = false;
-                btn.innerText = "Create Account";
+                btn.innerText = "Continue to Profile";
             }
         };
+        lucide.createIcons();
     </script>
 </body>
 </html>
-
 
