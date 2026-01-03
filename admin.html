@@ -3,243 +3,258 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel | R1 Tech Labs</title>
+    <title>Admin Dashboard | R1 Tech Labs</title>
+    <!-- Tailwind CSS for modern design -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons for UI components -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
-        body { font-family: 'Outfit', sans-serif; background-color: #f8fafc; color: #1e293b; }
         
-        /* Sidebar styling */
+        body { 
+            font-family: 'Outfit', sans-serif; 
+            background-color: #f8fafc; 
+            color: #1e293b; 
+        }
+
+        /* Sidebar navigation link states */
         .nav-link { transition: all 0.2s ease; cursor: pointer; }
         .nav-link:hover { background-color: #f1f5f9; color: #4f46e5; }
         .nav-link.active { background-color: #eef2ff; color: #4f46e5; border-right: 4px solid #4f46e5; }
         
+        /* Layout adjustments for single-page feel */
         .content-area { height: calc(100vh - 72px); overflow-y: auto; }
-        .admin-card { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); border: 1px solid #f1f5f9; }
-        
         .table-row { transition: all 0.2s; border-bottom: 1px solid #f1f5f9; }
         .table-row:hover { background-color: #f8faff; }
 
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        /* Scrollbar customization for professional look */
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
 <body class="overflow-hidden">
 
-    <!-- UNIVERSAL HEADER -->
-    <header class="h-[72px] bg-white border-b flex items-center justify-between px-6 sticky top-0 z-50">
+    <!-- TOP HEADER: COMPANY LOGO & LOGOUT -->
+    <header class="h-[72px] bg-white border-b border-slate-200 flex items-center justify-between px-6 sticky top-0 z-50">
         <div class="flex items-center gap-4">
-            <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+            <!-- Professional Branding -->
+            <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-100">
                 <i data-lucide="shield-check" class="text-white w-6 h-6"></i>
             </div>
             <div>
                 <h1 class="text-lg font-extrabold uppercase tracking-tighter">R1 Tech Labs</h1>
-                <p class="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">Admin Command Center</p>
+                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Master Administration</p>
             </div>
         </div>
-        <button onclick="logout()" class="px-5 py-2.5 bg-red-50 text-red-600 rounded-xl text-xs font-black uppercase hover:bg-red-600 hover:text-white transition-all">
-            Sign Out
-        </button>
+
+        <!-- Global Header Actions -->
+        <div class="flex items-center gap-3">
+            <button onclick="window.location.reload()" class="p-2 text-slate-400 hover:text-indigo-600 transition-colors" title="Reload System">
+                <i data-lucide="refresh-cw" class="w-5 h-5"></i>
+            </button>
+            <div class="h-6 w-[1px] bg-slate-200 mx-2"></div>
+            <button onclick="logout()" class="px-5 py-2.5 bg-red-50 text-red-600 rounded-xl text-xs font-black uppercase hover:bg-red-600 hover:text-white transition-all shadow-sm">
+                Sign Out
+            </button>
+        </div>
     </header>
 
     <div class="flex">
-        <!-- SIDE PANEL NAVIGATION -->
-        <aside class="w-64 bg-white border-r h-[calc(100vh-72px)] hidden md:flex flex-col py-6">
+        <!-- SIDE PANEL: MODULAR NAVIGATION -->
+        <aside class="w-64 bg-white border-r border-slate-200 h-[calc(100vh-72px)] hidden md:flex flex-col py-6">
+            <p class="px-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Operations</p>
             <nav class="flex-grow space-y-1">
-                <!-- Create SRF is the first/default option -->
+                <!-- 1. Create New SRF (Admin Priority) -->
                 <div onclick="switchView('create_srf')" id="nav-create_srf" class="nav-link px-6 py-4 flex items-center gap-3 font-bold text-indigo-600 text-sm">
-                    <i data-lucide="plus-square" class="w-5 h-5"></i> Create New SRF
+                    <i data-lucide="plus-circle" class="w-5 h-5"></i> Create New SRF
                 </div>
+                <!-- 2. Dashboard Stats -->
                 <div onclick="switchView('dashboard')" id="nav-dashboard" class="nav-link active px-6 py-4 flex items-center gap-3 font-bold text-sm">
-                    <i data-lucide="layout-grid" class="w-5 h-5"></i> Dashboard Summary
+                    <i data-lucide="layout-grid" class="w-5 h-5"></i> Dashboard
                 </div>
+                <!-- 3. Customer Directory (List View) -->
                 <div onclick="switchView('customers')" id="nav-customers" class="nav-link px-6 py-4 flex items-center gap-3 font-bold text-sm">
-                    <i data-lucide="users" class="w-5 h-5"></i> Customer Directory
+                    <i data-lucide="users" class="w-5 h-5"></i> Customers List
                 </div>
+                <!-- 4. Global SRF History -->
                 <div onclick="switchView('srf')" id="nav-srf" class="nav-link px-6 py-4 flex items-center gap-3 font-bold text-sm">
                     <i data-lucide="list" class="w-5 h-5"></i> SRF Records
                 </div>
             </nav>
             <div class="px-6 pt-6 border-t border-slate-50">
-                <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">System Cloud v1.5</p>
+                <p class="text-[10px] text-slate-300 font-black uppercase tracking-widest">Build v2.1.0</p>
             </div>
         </aside>
 
-        <!-- MAIN CONTENT AREA -->
+        <!-- MAIN VIEWPORT: DYNAMIC CONTENT AREA -->
         <main class="flex-grow content-area bg-slate-50 p-8 custom-scrollbar">
             <div id="view-container">
-                <!-- Content will be swapped here dynamically -->
+                <!-- SwitchView() function injects code here -->
             </div>
         </main>
     </div>
 
-    <!-- MAIN LOGIC & FIREBASE SYNC -->
+    <!-- CORE LOGIC & FIREBASE INTEGRATION -->
     <script type="module">
         import { auth, db, APP_ID } from './config.js';
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { collection, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // Local data storage for real-time reactivity
         let allLots = [], allCustomers = [], currentView = 'create_srf';
         let selectedClientId = "";
 
-        // Auth Check
+        // AUTHENTICATION GATEKEEPER
         onAuthStateChanged(auth, u => {
             if(!u || !u.email.startsWith('admin')) {
-                window.location.href = 'index.html';
+                window.location.href = 'index.html'; // Kick non-admins to login
             } else {
                 startRealtimeSync();
             }
         });
 
-        // Initialize Cloud Listeners
+        // FETCH DATA IN REAL-TIME FROM CLOUD
         function startRealtimeSync() {
-            // Listen to SRF Records
+            // Listen to SRF database changes
             onSnapshot(collection(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots'), (snap) => {
                 allLots = snap.docs.map(d => ({ id: d.id, ...d.data() }))
                           .sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-                refreshCurrentView();
+                refresh();
             });
 
-            // Listen to Customers
+            // Listen to Customer database changes
             onSnapshot(collection(db, 'artifacts', APP_ID, 'public', 'data', 'customers'), (snap) => {
                 allCustomers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                refreshCurrentView();
+                refresh();
             });
 
-            switchView('create_srf'); // Default view on load
+            switchView('create_srf'); // Default view
         }
 
         /**
-         * Navigation Logic
+         * SPA ROUTER: switchView()
+         * Swaps HTML blocks in memory to make the UI feel fast
          */
         window.switchView = (name) => {
             currentView = name;
+            // Update sidebar visual active state
             document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
-            const nav = document.getElementById('nav-' + name);
-            if(nav) nav.classList.add('active');
+            const navItem = document.getElementById('nav-' + name);
+            if(navItem) navItem.classList.add('active');
 
             const container = document.getElementById('view-container');
             
+            // Route to appropriate render function
             if(name === 'dashboard') renderDashboard(container);
-            else if(name === 'customers') renderCustomers(container);
+            else if(name === 'customers') renderCustomerList(container);
             else if(name === 'srf') renderSRFList(container);
-            else if(name === 'create_srf') renderCreateSRF(container);
+            else if(name === 'create_srf') renderCreateCompact(container);
             
-            lucide.createIcons();
+            lucide.createIcons(); // Initialize icons for newly injected HTML
         };
 
-        function refreshCurrentView() { switchView(currentView); }
+        function refresh() { switchView(currentView); }
 
-        // --- TAB 1: CREATE NEW SRF (IMPROVED) ---
-        function renderCreateSRF(c) {
+        // --- COMPACT CREATE SRF SECTION ---
+        function renderCreateCompact(c) {
             c.innerHTML = `
-                <div class="max-w-5xl mx-auto">
-                    <div class="text-center mb-12">
-                        <h2 class="text-4xl font-black text-slate-900 tracking-tighter uppercase">Initialize Service Request</h2>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">Choose how you want to start this record</p>
+                <div class="max-w-4xl mx-auto py-4">
+                    <div class="flex items-center gap-3 mb-8">
+                        <i data-lucide="file-plus" class="text-indigo-600 w-6 h-6"></i>
+                        <h2 class="text-2xl font-black text-slate-900 tracking-tight uppercase">Initialize Service Request</h2>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-                        <!-- Left Option: Search Existing Clients -->
-                        <div class="bg-white p-10 rounded-[3rem] border shadow-sm flex flex-col items-center">
-                            <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-[1.5rem] flex items-center justify-center mb-6">
-                                <i data-lucide="user-check" class="w-8 h-8"></i>
-                            </div>
-                            <h3 class="text-xl font-black mb-2">Registered Customer</h3>
-                            <p class="text-xs text-slate-400 mb-8 text-center leading-relaxed">Select a business from your current directory to pre-fill their details.</p>
-                            
-                            <!-- Search & Select -->
-                            <div class="w-full space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Left: Compact Existing Client Selection -->
+                        <div class="bg-white p-6 rounded-3xl border shadow-sm">
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Select Registered Client</p>
+                            <div class="space-y-4">
                                 <div class="relative">
-                                    <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300"></i>
-                                    <input type="text" id="clientSearchInput" oninput="filterClientDropdown(this.value)" placeholder="Search company..." class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:border-indigo-600 transition-all">
+                                    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300"></i>
+                                    <input type="text" oninput="filterClientDropdown(this.value)" placeholder="Search company..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border rounded-xl text-xs font-bold outline-none focus:border-indigo-600">
                                 </div>
-                                <select id="adminClientSelect" onchange="previewClientDetails(this.value)" class="w-full p-4 bg-white border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:border-indigo-600">
-                                    <option value="">-- Click to Select Client --</option>
+                                <select id="clientDropdown" onchange="clientPreviewUpdate(this.value)" class="w-full p-3 bg-white border rounded-xl text-xs font-bold outline-none focus:border-indigo-600">
+                                    <option value="">-- Choose Customer --</option>
                                     ${allCustomers.map(x => `<option value="${x.id}">${x.companyName}</option>`).join('')}
                                 </select>
                             </div>
-
-                            <!-- Preview Box -->
-                            <div id="clientPreview" class="hidden w-full mt-6 p-6 bg-indigo-50 rounded-[1.5rem] border border-indigo-100 animate-in fade-in slide-in-from-top-4">
-                                <p class="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-2">Client Selected</p>
-                                <h4 id="previewName" class="font-black text-indigo-700 text-sm uppercase truncate"></h4>
-                                <p id="previewAddr" class="text-[10px] text-indigo-500 font-bold mt-1 line-clamp-2 italic"></p>
+                            
+                            <div id="previewBox" class="hidden mt-4 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+                                <h4 id="prevName" class="text-xs font-black text-indigo-700 uppercase"></h4>
+                                <p id="prevAddr" class="text-[9px] text-indigo-400 font-bold mt-1 truncate"></p>
                             </div>
 
-                            <button onclick="startSrfWithClient()" id="startBtn" class="w-full mt-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase shadow-xl hover:bg-indigo-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all" disabled>
+                            <button id="contBtn" onclick="goToEditor()" class="w-full mt-6 py-3 bg-indigo-600 text-white rounded-xl font-black text-[10px] uppercase shadow-lg disabled:opacity-20" disabled>
                                 Continue with Selection
                             </button>
                         </div>
 
-                        <!-- Right Option: New Walk-in / Blank -->
-                        <div class="bg-slate-900 p-10 rounded-[3rem] text-white shadow-2xl flex flex-col items-center text-center">
-                            <div class="w-16 h-16 bg-white/10 text-white rounded-[1.5rem] flex items-center justify-center mb-6">
-                                <i data-lucide="user-plus" class="w-8 h-8"></i>
-                            </div>
-                            <h3 class="text-xl font-black mb-2">New Walk-in</h3>
-                            <p class="text-xs text-white/40 mb-10 leading-relaxed">Direct entry for one-time clients or unregistered businesses.</p>
-                            <div class="flex-grow"></div>
-                            <button onclick="window.location.href='admin_editor.html'" class="w-full py-4 bg-white text-slate-900 rounded-2xl font-black text-xs uppercase shadow-xl hover:bg-slate-100 transition-all">
-                                Open Blank Editor
-                            </button>
+                        <!-- Right: Create New Client Option -->
+                        <div class="bg-slate-900 p-6 rounded-3xl text-white flex flex-col items-center justify-center text-center">
+                            <i data-lucide="user-plus" class="w-8 h-8 mb-3 text-indigo-400"></i>
+                            <h3 class="font-black uppercase text-sm mb-2">Create New Client</h3>
+                            <p class="text-[10px] text-white/40 mb-6 px-4">Directly open a blank SRF to register a new client for the first time.</p>
+                            <button onclick="window.location.href='admin_editor.html'" class="w-full py-3 bg-white text-slate-900 rounded-xl font-black text-[10px] uppercase hover:bg-slate-100">Open Blank SRF</button>
                         </div>
                     </div>
                 </div>
             `;
-            lucide.createIcons();
         }
 
-        // Logic for filtering the client dropdown within the tab
-        window.filterClientDropdown = (query) => {
-            const q = query.toLowerCase();
-            const select = document.getElementById('adminClientSelect');
-            select.innerHTML = `<option value="">-- Select Client --</option>`;
-            
-            const filtered = allCustomers.filter(c => c.companyName.toLowerCase().includes(q));
-            filtered.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c.id;
-                opt.innerText = c.companyName;
-                select.appendChild(opt);
-            });
-        };
-
-        // Show preview when client is chosen
-        window.previewClientDetails = (cid) => {
-            const preview = document.getElementById('clientPreview');
-            const btn = document.getElementById('startBtn');
-            if(!cid) {
-                preview.classList.add('hidden');
-                btn.disabled = true;
-                return;
-            }
-            const client = allCustomers.find(c => c.id === cid);
-            document.getElementById('previewName').innerText = client.companyName;
-            document.getElementById('previewAddr').innerText = client.address || 'Address not listed';
-            preview.classList.remove('hidden');
-            btn.disabled = false;
-            selectedClientId = cid;
-        };
-
-        window.startSrfWithClient = () => {
-            if(selectedClientId) window.location.href = `admin_editor.html?cid=${selectedClientId}`;
-        };
-
-        // --- TAB 2: DASHBOARD ---
-        function renderDashboard(c) {
+        // --- CUSTOMER LIST VIEW (TABLE) ---
+        function renderCustomerList(c) {
             c.innerHTML = `
                 <div class="max-w-6xl mx-auto">
-                    <h2 class="text-3xl font-black mb-8 tracking-tight">Business Intelligence</h2>
+                    <div class="flex justify-between items-center mb-8">
+                        <div>
+                            <h2 class="text-2xl font-black text-slate-900 tracking-tight uppercase">Customer Directory</h2>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Management of all registered business accounts</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-[2rem] border shadow-sm overflow-hidden">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-50 border-b">
+                                <tr>
+                                    <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Company Name</th>
+                                    <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Contact Person</th>
+                                    <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Mobile / Contact</th>
+                                    <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">GST Number</th>
+                                    <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${allCustomers.map(cust => `
+                                    <tr class="table-row">
+                                        <td class="p-5 font-black text-xs text-slate-800 uppercase tracking-tight">${cust.companyName}</td>
+                                        <td class="p-5 text-xs font-bold text-slate-500">${cust.contactPerson || '-'}</td>
+                                        <td class="p-5 text-xs font-bold text-slate-400">${cust.phone || '-'}</td>
+                                        <td class="p-5 text-xs font-mono font-bold text-slate-400 uppercase">${cust.gstNo || '-'}</td>
+                                        <td class="p-5 text-right">
+                                            <button onclick="window.location.href='customers.html'" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg"><i data-lucide="external-link" class="w-4 h-4"></i></button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- DASHBOARD SUMMARY ---
+        function renderDashboard(c) {
+            c.innerHTML = `
+                <div class="max-w-4xl mx-auto">
+                    <h2 class="text-2xl font-black mb-8 tracking-tight uppercase">Cloud Overview</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="bg-white p-10 rounded-[2.5rem] border shadow-sm">
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Calibration Lots</p>
+                        <div class="bg-white p-8 rounded-[2rem] border shadow-sm">
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Lots</p>
                             <h3 class="text-5xl font-black mt-2 text-indigo-600">${allLots.length}</h3>
                         </div>
-                        <div class="bg-white p-10 rounded-[2.5rem] border shadow-sm">
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Global Customer Base</p>
+                        <div class="bg-white p-8 rounded-[2rem] border shadow-sm">
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Clients</p>
                             <h3 class="text-5xl font-black mt-2 text-slate-800">${allCustomers.length}</h3>
                         </div>
                     </div>
@@ -247,56 +262,28 @@
             `;
         }
 
-        // --- TAB 3: CUSTOMERS ---
-        function renderCustomers(c) {
-            c.innerHTML = `
-                <div class="max-w-6xl mx-auto">
-                    <h2 class="text-3xl font-black mb-8 tracking-tight">Customer Directory</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        ${allCustomers.map(x => `
-                            <div class="bg-white p-6 rounded-3xl border shadow-sm flex flex-col justify-between hover:border-indigo-200 transition-all">
-                                <div>
-                                    <h4 class="font-black text-slate-800 uppercase truncate">${x.companyName}</h4>
-                                    <p class="text-[10px] text-slate-400 mt-1 line-clamp-2">${x.address || 'N/A'}</p>
-                                </div>
-                                <button onclick="window.location.href='customers.html'" class="mt-6 w-full py-3 bg-slate-50 text-indigo-600 rounded-xl font-black text-[10px] uppercase hover:bg-indigo-600 hover:text-white">Profile</button>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-        }
-
-        // --- TAB 4: SRF RECORDS LIST ---
+        // --- SRF RECORDS LIST ---
         function renderSRFList(c) {
             c.innerHTML = `
                 <div class="max-w-7xl mx-auto">
-                    <div class="flex flex-col md:flex-row justify-between items-end gap-6 mb-10">
-                        <div>
-                            <h2 class="text-3xl font-black text-slate-900 tracking-tight">Master Database</h2>
-                            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Full history of calibration requests</p>
-                        </div>
-                        <div class="relative w-full md:w-96">
-                            <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
-                            <input type="text" id="adminGlobalSearch" oninput="filterAdminSRF(this.value)" placeholder="Search by ID or Customer..." class="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl outline-none focus:border-indigo-500 shadow-sm text-sm font-bold">
-                        </div>
+                    <div class="flex flex-col md:flex-row justify-between items-end gap-6 mb-8">
+                        <h2 class="text-2xl font-black text-slate-900 tracking-tight uppercase">Master SRF Records</h2>
+                        <input type="text" oninput="filterAdminSRF(this.value)" placeholder="Search ID or Customer..." class="px-5 py-3 bg-white border rounded-2xl text-xs font-bold outline-none focus:border-indigo-600 w-full md:w-80 shadow-sm">
                     </div>
-
-                    <div class="bg-white rounded-[2.5rem] border shadow-sm overflow-hidden">
+                    <div class="bg-white rounded-[2rem] border shadow-sm overflow-hidden">
                         <div class="overflow-x-auto">
                             <table class="w-full text-left">
                                 <thead class="bg-slate-50 border-b">
                                     <tr>
                                         <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">SRF ID</th>
-                                        <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Customer Name</th>
-                                        <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">End Site</th>
-                                        <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
+                                        <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Provider</th>
+                                        <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">End Customer</th>
                                         <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Items</th>
-                                        <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Action</th>
+                                        <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody id="adminLotTableBody">
-                                    ${allLots.map(l => createAdminRow(l)).join('')}
+                                <tbody id="srfTableBody">
+                                    ${allLots.map(l => createSRFRow(l)).join('')}
                                 </tbody>
                             </table>
                         </div>
@@ -305,63 +292,69 @@
             `;
         }
 
-        function createAdminRow(l) {
-            const dateStr = l.createdAt ? new Date(l.createdAt.toDate()).toLocaleDateString('en-GB', {
-                day: '2-digit', month: 'short', year: 'numeric'
-            }) : 'Syncing';
-
-            return `
-                <tr class="table-row">
-                    <td class="p-5"><span class="font-black text-indigo-600 uppercase text-xs">${l.srfId}</span></td>
-                    <td class="p-5"><span class="font-bold text-slate-800 uppercase text-xs">${l.companyName}</span></td>
-                    <td class="p-5"><span class="font-bold text-slate-500 uppercase text-xs italic">${l.endCustomerName || l.companyName}</span></td>
-                    <td class="p-5 text-xs font-bold text-slate-400 uppercase">${dateStr}</td>
-                    <td class="p-5 text-center"><span class="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-[10px] font-black">${l.total}</span></td>
-                    <td class="p-5 text-right flex justify-end gap-1">
-                        <button onclick='exportToExcel(${JSON.stringify(l)})' class="p-2.5 text-emerald-600 hover:bg-emerald-50 rounded-xl" title="Export Excel"><i data-lucide="download" class="w-4 h-4"></i></button>
-                        <button onclick="window.location.href='admin_editor.html?id=${l.id}'" class="p-2.5 text-indigo-600 hover:bg-indigo-50 rounded-xl" title="Edit"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
-                        <button onclick="deleteLot('${l.id}')" class="p-2.5 text-red-300 hover:text-red-600 rounded-xl" title="Delete"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                    </td>
-                </tr>
-            `;
+        // Helper for SRF rows
+        function createSRFRow(l) {
+            return `<tr class="table-row">
+                <td class="p-5"><span class="font-black text-indigo-600 uppercase text-xs">${l.srfId}</span></td>
+                <td class="p-5 font-bold text-slate-800 text-xs uppercase">${l.companyName}</td>
+                <td class="p-5 font-bold text-slate-400 text-xs uppercase italic">${l.endCustomerName || l.companyName}</td>
+                <td class="p-5 text-center"><span class="bg-slate-100 px-3 py-1 rounded-lg text-[10px] font-black">${l.total}</span></td>
+                <td class="p-5 text-right flex justify-end gap-1">
+                    <button onclick='exportToExcel(${JSON.stringify(l)})' class="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg"><i data-lucide="download" class="w-4 h-4"></i></button>
+                    <button onclick="window.location.href='admin_editor.html?id=${l.id}'" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                </td>
+            </tr>`;
         }
 
-        // --- COMMON UTILITIES ---
+        // --- UTILITIES ---
+
+        window.filterClientDropdown = (query) => {
+            const q = query.toLowerCase();
+            const dropdown = document.getElementById('clientDropdown');
+            dropdown.innerHTML = `<option value="">-- Choose Customer --</option>`;
+            const filtered = allCustomers.filter(c => c.companyName.toLowerCase().includes(q));
+            filtered.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id; opt.innerText = c.companyName;
+                dropdown.appendChild(opt);
+            });
+        };
+
+        window.clientPreviewUpdate = (cid) => {
+            const box = document.getElementById('previewBox');
+            const btn = document.getElementById('contBtn');
+            if(!cid) { box.classList.add('hidden'); btn.disabled = true; return; }
+            const client = allCustomers.find(c => c.id === cid);
+            document.getElementById('prevName').innerText = client.companyName;
+            document.getElementById('prevAddr').innerText = client.address || 'N/A';
+            box.classList.remove('hidden'); btn.disabled = false; selectedClientId = cid;
+        };
+
+        window.goToEditor = () => { if(selectedClientId) window.location.href = `admin_editor.html?cid=${selectedClientId}`; };
 
         window.filterAdminSRF = (q) => {
-            const term = q.toLowerCase();
-            const filtered = allLots.filter(l => 
-                l.srfId.toLowerCase().includes(term) || 
-                l.companyName.toLowerCase().includes(term) ||
-                (l.endCustomerName && l.endCustomerName.toLowerCase().includes(term))
-            );
-            document.getElementById('adminLotTableBody').innerHTML = filtered.map(l => createAdminRow(l)).join('');
+            const t = q.toLowerCase();
+            const filtered = allLots.filter(l => l.srfId.toLowerCase().includes(t) || l.companyName.toLowerCase().includes(t));
+            document.getElementById('srfTableBody').innerHTML = filtered.map(l => createSRFRow(l)).join('');
             lucide.createIcons();
-        };
-
-        window.deleteLot = async (id) => {
-            if(confirm("Permanently delete this entire record?")) {
-                try { await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots', id)); } 
-                catch(e) { alert("Action Failed."); }
-            }
-        };
+        }
 
         window.exportToExcel = (lot) => {
-            let csv = "\uFEFFLot ID,Provider,Provider Address,End Customer,End Address,GST No,Job No,Instrument,Make,Model,Sr No,ID No,Range,LC,Cal Date,Location\n";
+            let csv = "\uFEFFLot ID,Provider,Provider Address,End Customer,End Address,Job No,Instrument,Make,Model,ID No,Range,LC,Cal Date,Location\n";
             lot.items.forEach(i => {
-                const pAddr = (lot.address || "").replace(/\n/g, ' ').replace(/"/g, '""');
-                const eAddr = (lot.endCustomerAddress || "").replace(/\n/g, ' ').replace(/"/g, '""');
-                csv += `"${lot.srfId}","${lot.companyName}","${pAddr}","${lot.endCustomerName || lot.companyName}","${eAddr || pAddr}","${lot.gstNo||''}","${i.jobNo}","${i.name}","${i.make}","${i.model}","${i.srNo}","${i.idNo}","${i.range}","${i.lc}","${i.calDate}","${i.location}"\n`;
+                const pA = (lot.address || "").replace(/\n/g, ' ').replace(/"/g, '""');
+                const eA = (lot.endCustomerAddress || "").replace(/\n/g, ' ').replace(/"/g, '""');
+                csv += `"${lot.srfId}","${lot.companyName}","${pA}","${lot.endCustomerName || lot.companyName}","${eA || pA}","${i.jobNo}","${i.name}","${i.make}","${i.model}","${i.idNo}","${i.range}","${i.lc}","${i.calDate}","${i.location}"\n`;
             });
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.download = `Report_${lot.srfId.replace(/\//g, '-')}.csv`;
+            link.download = `SRF_Export_${lot.srfId.replace(/\//g, '-')}.csv`;
             link.click();
         };
 
         window.logout = () => signOut(auth).then(() => window.location.href = 'index.html');
-        
+
         lucide.createIcons();
     </script>
 </body>
