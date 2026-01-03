@@ -27,7 +27,7 @@
     <!-- Loading Overlay -->
     <div id="pageLoader" class="fixed inset-0 bg-white z-[500] flex flex-col items-center justify-center">
         <div class="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-        <p class="mt-4 text-slate-500 font-bold text-[10px] uppercase tracking-[0.2em]">Profile Sync Ho Raha Hai...</p>
+        <p class="mt-4 text-slate-500 font-bold text-[10px] uppercase tracking-[0.2em]">Syncing Profile Data...</p>
     </div>
 
     <!-- Header -->
@@ -62,14 +62,14 @@
             <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                 <div>
                     <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">Site Locations List</h3>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Apne saare plants ya sites yahan manage karein</p>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Manage your branch/plant details here</p>
                 </div>
                 <button onclick="addSiteRow()" class="flex items-center gap-2 text-[10px] font-black uppercase text-white bg-indigo-600 px-5 py-2.5 rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all">
                     <i data-lucide="plus" class="w-4 h-4"></i> Add New Site
                 </button>
             </div>
 
-            <!-- Table Header -->
+            <!-- Table Header (Desktop Only) -->
             <div class="grid grid-cols-12 gap-4 px-6 py-3 bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 hidden md:grid">
                 <div class="col-span-1">Sr.</div>
                 <div class="col-span-5">Site Address / Location</div>
@@ -87,7 +87,7 @@
                 <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
                     <i data-lucide="map-pin" class="text-slate-200 w-8 h-8"></i>
                 </div>
-                <p class="text-xs font-bold text-slate-300 uppercase tracking-widest">Koi site added nahi hai.</p>
+                <p class="text-xs font-bold text-slate-300 uppercase tracking-widest">No site added yet.</p>
             </div>
         </div>
 
@@ -120,9 +120,11 @@
         async function loadExistingData() {
             let snap;
             if(isAdmin && cid) {
+                // Admin editing specific client
                 document.getElementById('pageTitle').innerText = "Update Client Details";
                 snap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'customers', cid));
             } else if(!isAdmin) {
+                // Customer editing own profile
                 snap = await getDoc(doc(db, 'artifacts', APP_ID, 'users', currentUid, 'settings', 'profile'));
             }
 
@@ -142,9 +144,6 @@
             }
         }
 
-        /**
-         * List View Row Generator
-         */
         window.addSiteRow = (data = null) => {
             document.getElementById('emptyHint').classList.add('hidden');
             const container = document.getElementById('sitesContainer');
@@ -158,10 +157,10 @@
                 <div class="grid grid-cols-12 gap-4 px-6 py-4 items-center cursor-pointer" onclick="toggleExpand('${rowId}')">
                     <div class="col-span-1 text-[10px] font-black text-slate-300 sr-num">01</div>
                     <div class="col-span-11 md:col-span-5">
-                        <p class="text-xs font-bold text-slate-700 truncate summary-addr">${data?.siteAddress || 'Naya Site Address...'}</p>
+                        <p class="text-xs font-bold text-slate-700 truncate summary-addr">${data?.siteAddress || 'New Site Location...'}</p>
                     </div>
                     <div class="col-span-8 md:col-span-4 hidden md:block">
-                        <p class="text-[10px] font-black text-slate-400 uppercase summary-name">${data?.contactName || 'Contact Person?'}</p>
+                        <p class="text-[10px] font-black text-slate-400 uppercase summary-name">${data?.contactName || 'Pending Contact'}</p>
                     </div>
                     <div class="col-span-4 md:col-span-2 text-right flex justify-end gap-2">
                         <button class="p-2 text-slate-300 hover:text-indigo-600 transition-colors">
@@ -173,7 +172,7 @@
                     </div>
                 </div>
 
-                <!-- Detailed Form (Hidden by default) -->
+                <!-- Detailed Form -->
                 <div class="site-details shadow-inner">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="md:col-span-1">
@@ -224,10 +223,7 @@
         window.toggleExpand = (id) => {
             const row = document.getElementById(id);
             const isExpanded = row.classList.contains('expanded');
-            
-            // Close others
             document.querySelectorAll('.site-row').forEach(r => r.classList.remove('expanded'));
-            
             if(!isExpanded) {
                 row.classList.add('expanded');
                 row.querySelector('.expand-icon').style.transform = 'rotate(180deg)';
@@ -240,8 +236,8 @@
             const row = document.getElementById(id);
             const addr = row.querySelector('.site-addr').value;
             const name = row.querySelector('.person-name').value;
-            row.querySelector('.summary-addr').innerText = addr || 'Naya Site Address...';
-            row.querySelector('.summary-name').innerText = name || 'Contact Person?';
+            row.querySelector('.summary-addr').innerText = addr || 'New Site Location...';
+            row.querySelector('.summary-name').innerText = name || 'Pending Contact';
         };
 
         window.updateSrNumbers = () => {
@@ -255,7 +251,7 @@
                 document.getElementById(id).remove();
                 updateSrNumbers();
             } else {
-                alert("Kam se kam ek site hona zaroori hai.");
+                alert("At least one site is required.");
             }
         };
 
@@ -268,10 +264,10 @@
         window.saveProfile = async () => {
             const comp = document.getElementById('compName').value.trim();
             const rows = document.querySelectorAll('.site-row');
-            if(!comp || rows.length === 0) return alert("Please fill all mandatory fields!");
+            if(!comp || rows.length === 0) return alert("Validation Failed: Company and Sites are mandatory.");
 
             const btn = document.getElementById('saveBtn');
-            btn.disabled = true; btn.innerText = "Processing...";
+            btn.disabled = true; btn.innerText = "Processing Cloud Sync...";
 
             const sites = Array.from(rows).map(r => ({
                 siteAddress: r.querySelector('.site-addr').value.trim(),
@@ -282,15 +278,6 @@
                 contactPhone: r.querySelector('.person-phone').value.trim(),
                 contactEmail: r.querySelector('.person-email').value.trim()
             }));
-
-            // Basic validation check
-            for(let s of sites) {
-                if(!s.siteAddress || !s.contactName || !s.contactPhone) {
-                    alert("Har site ke liye Address, Name aur Mobile Number dena zaroori hai.");
-                    btn.disabled = false; btn.innerText = "Save All Information";
-                    return;
-                }
-            }
 
             const payload = {
                 companyName: comp,
@@ -305,16 +292,16 @@
             try {
                 if(isAdmin && cid) {
                     await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'customers', cid), payload, { merge: true });
-                    alert("Client Profile Updated! ✅");
+                    alert("Client Directory Updated! ✅");
                     window.location.href = 'admin.html';
                 } else {
                     await setDoc(doc(db, 'artifacts', APP_ID, 'users', currentUid, 'settings', 'profile'), payload, { merge: true });
                     await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'customers', currentUid), payload, { merge: true });
-                    alert("Profile Update Ho Gaya! ✅");
+                    alert("Profile Sync Complete! ✅");
                     window.location.href = 'dashboard.html';
                 }
             } catch (e) {
-                alert("Saving Fail: " + e.message);
+                alert("Sync Failed: " + e.message);
                 btn.disabled = false; btn.innerText = "Save All Information";
             }
         };
@@ -324,5 +311,4 @@
     </script>
 </body>
 </html>
-
 
