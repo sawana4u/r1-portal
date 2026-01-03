@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard | R1 Tech Labs</title>
-    <!-- Tailwind CSS for modern design -->
+    <!-- Tailwind CSS for modern styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons for UI components -->
+    <!-- Lucide Icons for professional UI components -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
@@ -22,12 +22,12 @@
         .nav-link:hover { background-color: #f1f5f9; color: #4f46e5; }
         .nav-link.active { background-color: #eef2ff; color: #4f46e5; border-right: 4px solid #4f46e5; }
         
-        /* Layout adjustments for single-page feel */
+        /* Layout adjustments for single-page application feel */
         .content-area { height: calc(100vh - 72px); overflow-y: auto; }
         .table-row { transition: all 0.2s; border-bottom: 1px solid #f1f5f9; }
         .table-row:hover { background-color: #f8faff; }
 
-        /* Scrollbar customization for professional look */
+        /* Custom scrollbar for a professional appearance */
         .custom-scrollbar::-webkit-scrollbar { width: 5px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -35,7 +35,7 @@
 </head>
 <body class="overflow-hidden">
 
-    <!-- TOP HEADER: COMPANY LOGO & LOGOUT -->
+    <!-- TOP HEADER: LOGO & SIGN OUT -->
     <header class="h-[72px] bg-white border-b border-slate-200 flex items-center justify-between px-6 sticky top-0 z-50">
         <div class="flex items-center gap-4">
             <!-- Professional Branding -->
@@ -48,7 +48,7 @@
             </div>
         </div>
 
-        <!-- Global Header Actions -->
+        <!-- Header Actions -->
         <div class="flex items-center gap-3">
             <button onclick="window.location.reload()" class="p-2 text-slate-400 hover:text-indigo-600 transition-colors" title="Reload System">
                 <i data-lucide="refresh-cw" class="w-5 h-5"></i>
@@ -61,229 +61,193 @@
     </header>
 
     <div class="flex">
-        <!-- SIDE PANEL: MODULAR NAVIGATION -->
+        <!-- SIDE PANEL NAVIGATION -->
         <aside class="w-64 bg-white border-r border-slate-200 h-[calc(100vh-72px)] hidden md:flex flex-col py-6">
             <p class="px-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Operations</p>
             <nav class="flex-grow space-y-1">
-                <!-- 1. Create New SRF (Admin Priority) -->
+                <!-- 1. Create New SRF (Primary Admin Task) -->
                 <div onclick="switchView('create_srf')" id="nav-create_srf" class="nav-link px-6 py-4 flex items-center gap-3 font-bold text-indigo-600 text-sm">
                     <i data-lucide="plus-circle" class="w-5 h-5"></i> Create New SRF
                 </div>
-                <!-- 2. Dashboard Stats -->
+                <!-- 2. Dashboard Stats Overview -->
                 <div onclick="switchView('dashboard')" id="nav-dashboard" class="nav-link active px-6 py-4 flex items-center gap-3 font-bold text-sm">
-                    <i data-lucide="layout-grid" class="w-5 h-5"></i> Dashboard
+                    <i data-lucide="layout-grid" class="w-5 h-5"></i> Dashboard Summary
                 </div>
                 <!-- 3. Customer Directory (List View) -->
                 <div onclick="switchView('customers')" id="nav-customers" class="nav-link px-6 py-4 flex items-center gap-3 font-bold text-sm">
-                    <i data-lucide="users" class="w-5 h-5"></i> Customers List
+                    <i data-lucide="users" class="w-5 h-5"></i> Customer Directory
                 </div>
-                <!-- 4. Global SRF History -->
+                <!-- 4. Global SRF Records -->
                 <div onclick="switchView('srf')" id="nav-srf" class="nav-link px-6 py-4 flex items-center gap-3 font-bold text-sm">
                     <i data-lucide="list" class="w-5 h-5"></i> SRF Records
                 </div>
             </nav>
             <div class="px-6 pt-6 border-t border-slate-50">
-                <p class="text-[10px] text-slate-300 font-black uppercase tracking-widest">Build v2.1.0</p>
+                <p class="text-[10px] text-slate-300 font-black uppercase tracking-widest">Build v2.2.0</p>
             </div>
         </aside>
 
         <!-- MAIN VIEWPORT: DYNAMIC CONTENT AREA -->
         <main class="flex-grow content-area bg-slate-50 p-8 custom-scrollbar">
             <div id="view-container">
-                <!-- SwitchView() function injects code here -->
+                <!-- switchView() dynamically injects code here -->
             </div>
         </main>
     </div>
 
-    <!-- CORE LOGIC & FIREBASE INTEGRATION -->
+    <!-- CORE LOGIC & CLOUD SYNC -->
     <script type="module">
         import { auth, db, APP_ID } from './config.js';
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { collection, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Local data storage for real-time reactivity
+        // Local state management
         let allLots = [], allCustomers = [], currentView = 'create_srf';
         let selectedClientId = "";
 
-        // AUTHENTICATION GATEKEEPER
+        // AUTHENTICATION GUARD
         onAuthStateChanged(auth, u => {
             if(!u || !u.email.startsWith('admin')) {
-                window.location.href = 'index.html'; // Kick non-admins to login
+                window.location.href = 'index.html'; // Redirect non-admins
             } else {
-                startRealtimeSync();
+                startDataSubscription();
             }
         });
 
-        // FETCH DATA IN REAL-TIME FROM CLOUD
-        function startRealtimeSync() {
-            // Listen to SRF database changes
+        // REAL-TIME DATA SUBSCRIPTION
+        function startDataSubscription() {
+            // Subscribe to SRF Lots
             onSnapshot(collection(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots'), (snap) => {
                 allLots = snap.docs.map(d => ({ id: d.id, ...d.data() }))
                           .sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-                refresh();
+                refreshCurrentView();
             });
 
-            // Listen to Customer database changes
+            // Subscribe to Customers Directory
             onSnapshot(collection(db, 'artifacts', APP_ID, 'public', 'data', 'customers'), (snap) => {
                 allCustomers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                refresh();
+                refreshCurrentView();
             });
 
-            switchView('create_srf'); // Default view
+            switchView('create_srf'); // Default view on load
         }
 
         /**
-         * SPA ROUTER: switchView()
-         * Swaps HTML blocks in memory to make the UI feel fast
+         * Navigation Router
+         * Handles content swapping based on selected sidebar option
          */
         window.switchView = (name) => {
             currentView = name;
-            // Update sidebar visual active state
+            // Update sidebar UI
             document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
-            const navItem = document.getElementById('nav-' + name);
-            if(navItem) navItem.classList.add('active');
+            const activeNav = document.getElementById('nav-' + name);
+            if(activeNav) activeNav.classList.add('active');
 
             const container = document.getElementById('view-container');
             
-            // Route to appropriate render function
+            // Render relevant view
             if(name === 'dashboard') renderDashboard(container);
             else if(name === 'customers') renderCustomerList(container);
             else if(name === 'srf') renderSRFList(container);
-            else if(name === 'create_srf') renderCreateCompact(container);
+            else if(name === 'create_srf') renderCreateSelection(container);
             
-            lucide.createIcons(); // Initialize icons for newly injected HTML
+            lucide.createIcons(); // Re-initialize icons
         };
 
-        function refresh() { switchView(currentView); }
+        function refreshCurrentView() { switchView(currentView); }
 
-        // --- COMPACT CREATE SRF SECTION ---
-        function renderCreateCompact(c) {
+        // --- SECTION: CREATE NEW SRF (COMPACT) ---
+        function renderCreateSelection(c) {
             c.innerHTML = `
-                <div class="max-w-4xl mx-auto py-4">
-                    <div class="flex items-center gap-3 mb-8">
-                        <i data-lucide="file-plus" class="text-indigo-600 w-6 h-6"></i>
-                        <h2 class="text-2xl font-black text-slate-900 tracking-tight uppercase">Initialize Service Request</h2>
+                <div class="max-w-4xl mx-auto py-6">
+                    <div class="flex items-center gap-3 mb-10">
+                        <i data-lucide="file-plus-2" class="text-indigo-600 w-6 h-6"></i>
+                        <h2 class="text-2xl font-black text-slate-900 tracking-tight uppercase">New Service Request</h2>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Left: Compact Existing Client Selection -->
-                        <div class="bg-white p-6 rounded-3xl border shadow-sm">
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Select Registered Client</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Option: Registered Customer -->
+                        <div class="bg-white p-8 rounded-[2.5rem] border shadow-sm">
+                            <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-6">
+                                <i data-lucide="user-check" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="font-black text-slate-800 uppercase text-sm mb-2">Registered Customer</h3>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-6">Start SRF for an existing client</p>
+                            
                             <div class="space-y-4">
                                 <div class="relative">
                                     <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300"></i>
-                                    <input type="text" oninput="filterClientDropdown(this.value)" placeholder="Search company..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border rounded-xl text-xs font-bold outline-none focus:border-indigo-600">
+                                    <input type="text" oninput="filterClientDropdown(this.value)" placeholder="Quick search..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-xs font-bold outline-none focus:border-indigo-600 transition-all">
                                 </div>
-                                <select id="clientDropdown" onchange="clientPreviewUpdate(this.value)" class="w-full p-3 bg-white border rounded-xl text-xs font-bold outline-none focus:border-indigo-600">
-                                    <option value="">-- Choose Customer --</option>
+                                <select id="clientDropdown" onchange="updatePreview(this.value)" class="w-full p-3.5 bg-white border rounded-xl text-xs font-bold outline-none focus:border-indigo-600 transition-all">
+                                    <option value="">-- Choose Company --</option>
                                     ${allCustomers.map(x => `<option value="${x.id}">${x.companyName}</option>`).join('')}
                                 </select>
                             </div>
                             
-                            <div id="previewBox" class="hidden mt-4 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
-                                <h4 id="prevName" class="text-xs font-black text-indigo-700 uppercase"></h4>
-                                <p id="prevAddr" class="text-[9px] text-indigo-400 font-bold mt-1 truncate"></p>
+                            <!-- Selection Preview -->
+                            <div id="selectionPreview" class="hidden mt-4 p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
+                                <h4 id="previewName" class="text-xs font-black text-indigo-700 uppercase"></h4>
+                                <p id="previewAddress" class="text-[9px] text-indigo-400 font-bold mt-1 truncate italic"></p>
                             </div>
 
-                            <button id="contBtn" onclick="goToEditor()" class="w-full mt-6 py-3 bg-indigo-600 text-white rounded-xl font-black text-[10px] uppercase shadow-lg disabled:opacity-20" disabled>
-                                Continue with Selection
+                            <button id="btnContinue" onclick="startWithClient()" class="w-full mt-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase shadow-xl shadow-indigo-100 disabled:opacity-20 transition-all" disabled>
+                                Select and Continue
                             </button>
                         </div>
 
-                        <!-- Right: Create New Client Option -->
-                        <div class="bg-slate-900 p-6 rounded-3xl text-white flex flex-col items-center justify-center text-center">
-                            <i data-lucide="user-plus" class="w-8 h-8 mb-3 text-indigo-400"></i>
-                            <h3 class="font-black uppercase text-sm mb-2">Create New Client</h3>
-                            <p class="text-[10px] text-white/40 mb-6 px-4">Directly open a blank SRF to register a new client for the first time.</p>
-                            <button onclick="window.location.href='admin_editor.html'" class="w-full py-3 bg-white text-slate-900 rounded-xl font-black text-[10px] uppercase hover:bg-slate-100">Open Blank SRF</button>
+                        <!-- Option: Create New Client (White Card) -->
+                        <div class="bg-white p-8 rounded-[2.5rem] border shadow-sm flex flex-col">
+                            <div class="w-12 h-12 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center mb-6">
+                                <i data-lucide="user-plus" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="font-black text-slate-800 uppercase text-sm mb-2">Create New Client</h3>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-10">Start a blank entry for a new business</p>
+                            <div class="flex-grow"></div>
+                            <button onclick="window.location.href='admin_editor.html'" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase shadow-xl hover:bg-indigo-600 transition-all">
+                                Start New Client Entry
+                            </button>
                         </div>
                     </div>
                 </div>
             `;
         }
 
-        // --- CUSTOMER LIST VIEW (TABLE) ---
+        // --- SECTION: CUSTOMER DIRECTORY (LIST VIEW) ---
         function renderCustomerList(c) {
             c.innerHTML = `
                 <div class="max-w-6xl mx-auto">
-                    <div class="flex justify-between items-center mb-8">
+                    <div class="flex justify-between items-center mb-10">
                         <div>
                             <h2 class="text-2xl font-black text-slate-900 tracking-tight uppercase">Customer Directory</h2>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Management of all registered business accounts</p>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Management of global business profiles</p>
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-[2rem] border shadow-sm overflow-hidden">
-                        <table class="w-full text-left">
-                            <thead class="bg-slate-50 border-b">
-                                <tr>
-                                    <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Company Name</th>
-                                    <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Contact Person</th>
-                                    <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Mobile / Contact</th>
-                                    <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">GST Number</th>
-                                    <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${allCustomers.map(cust => `
-                                    <tr class="table-row">
-                                        <td class="p-5 font-black text-xs text-slate-800 uppercase tracking-tight">${cust.companyName}</td>
-                                        <td class="p-5 text-xs font-bold text-slate-500">${cust.contactPerson || '-'}</td>
-                                        <td class="p-5 text-xs font-bold text-slate-400">${cust.phone || '-'}</td>
-                                        <td class="p-5 text-xs font-mono font-bold text-slate-400 uppercase">${cust.gstNo || '-'}</td>
-                                        <td class="p-5 text-right">
-                                            <button onclick="window.location.href='customers.html'" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg"><i data-lucide="external-link" class="w-4 h-4"></i></button>
-                                        </td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
-        }
-
-        // --- DASHBOARD SUMMARY ---
-        function renderDashboard(c) {
-            c.innerHTML = `
-                <div class="max-w-4xl mx-auto">
-                    <h2 class="text-2xl font-black mb-8 tracking-tight uppercase">Cloud Overview</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="bg-white p-8 rounded-[2rem] border shadow-sm">
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Lots</p>
-                            <h3 class="text-5xl font-black mt-2 text-indigo-600">${allLots.length}</h3>
-                        </div>
-                        <div class="bg-white p-8 rounded-[2rem] border shadow-sm">
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Clients</p>
-                            <h3 class="text-5xl font-black mt-2 text-slate-800">${allCustomers.length}</h3>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // --- SRF RECORDS LIST ---
-        function renderSRFList(c) {
-            c.innerHTML = `
-                <div class="max-w-7xl mx-auto">
-                    <div class="flex flex-col md:flex-row justify-between items-end gap-6 mb-8">
-                        <h2 class="text-2xl font-black text-slate-900 tracking-tight uppercase">Master SRF Records</h2>
-                        <input type="text" oninput="filterAdminSRF(this.value)" placeholder="Search ID or Customer..." class="px-5 py-3 bg-white border rounded-2xl text-xs font-bold outline-none focus:border-indigo-600 w-full md:w-80 shadow-sm">
-                    </div>
-                    <div class="bg-white rounded-[2rem] border shadow-sm overflow-hidden">
+                    <div class="bg-white rounded-[2.5rem] border shadow-sm overflow-hidden">
                         <div class="overflow-x-auto">
                             <table class="w-full text-left">
                                 <thead class="bg-slate-50 border-b">
                                     <tr>
-                                        <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">SRF ID</th>
-                                        <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Provider</th>
-                                        <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">End Customer</th>
-                                        <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Items</th>
-                                        <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                                        <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Business Name</th>
+                                        <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Contact Person</th>
+                                        <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Phone / Mobile</th>
+                                        <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">GST Number</th>
+                                        <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Profile</th>
                                     </tr>
                                 </thead>
-                                <tbody id="srfTableBody">
-                                    ${allLots.map(l => createSRFRow(l)).join('')}
+                                <tbody>
+                                    ${allCustomers.map(cust => `
+                                        <tr class="table-row">
+                                            <td class="p-5 font-black text-xs text-slate-800 uppercase tracking-tight">${cust.companyName}</td>
+                                            <td class="p-5 text-xs font-bold text-slate-500">${cust.contactPerson || '-'}</td>
+                                            <td class="p-5 text-xs font-bold text-slate-400">${cust.phone || '-'}</td>
+                                            <td class="p-5 text-xs font-mono font-bold text-slate-300 uppercase">${cust.gstNo || '-'}</td>
+                                            <td class="p-5 text-right">
+                                                <button onclick="window.location.href='customers.html'" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"><i data-lucide="arrow-right-circle" class="w-5 h-5"></i></button>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
                                 </tbody>
                             </table>
                         </div>
@@ -292,54 +256,105 @@
             `;
         }
 
-        // Helper for SRF rows
-        function createSRFRow(l) {
+        // --- SECTION: DASHBOARD OVERVIEW ---
+        function renderDashboard(c) {
+            c.innerHTML = `
+                <div class="max-w-5xl mx-auto">
+                    <h2 class="text-2xl font-black mb-10 tracking-tight uppercase">System Summary</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="bg-white p-12 rounded-[3rem] border shadow-sm">
+                            <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Total Lots Processed</p>
+                            <h3 class="text-6xl font-black mt-4 text-indigo-600 tracking-tighter">${allLots.length}</h3>
+                        </div>
+                        <div class="bg-white p-12 rounded-[3rem] border shadow-sm">
+                            <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Active Client Database</p>
+                            <h3 class="text-6xl font-black mt-4 text-slate-800 tracking-tighter">${allCustomers.length}</h3>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- SECTION: SRF RECORDS LIST ---
+        function renderSRFList(c) {
+            c.innerHTML = `
+                <div class="max-w-7xl mx-auto">
+                    <div class="flex flex-col md:flex-row justify-between items-end gap-6 mb-10">
+                        <div>
+                            <h2 class="text-2xl font-black text-slate-900 tracking-tight uppercase">Master SRF History</h2>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Full audit trail of all calibration records</p>
+                        </div>
+                        <input type="text" oninput="filterSRFRecords(this.value)" placeholder="Search ID or Customer..." class="px-6 py-4 bg-white border rounded-2xl text-xs font-bold outline-none focus:border-indigo-600 w-full md:w-96 shadow-sm">
+                    </div>
+                    <div class="bg-white rounded-[2.5rem] border shadow-sm overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead class="bg-slate-50 border-b">
+                                    <tr>
+                                        <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">SRF ID</th>
+                                        <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Service Provider</th>
+                                        <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">End Customer (Site)</th>
+                                        <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Qty</th>
+                                        <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="srfDataTable">
+                                    ${allLots.map(lot => buildSRFRow(lot)).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function buildSRFRow(lot) {
             return `<tr class="table-row">
-                <td class="p-5"><span class="font-black text-indigo-600 uppercase text-xs">${l.srfId}</span></td>
-                <td class="p-5 font-bold text-slate-800 text-xs uppercase">${l.companyName}</td>
-                <td class="p-5 font-bold text-slate-400 text-xs uppercase italic">${l.endCustomerName || l.companyName}</td>
-                <td class="p-5 text-center"><span class="bg-slate-100 px-3 py-1 rounded-lg text-[10px] font-black">${l.total}</span></td>
+                <td class="p-5"><span class="font-black text-indigo-600 uppercase text-xs tracking-tight">${lot.srfId}</span></td>
+                <td class="p-5 font-bold text-slate-800 text-xs uppercase">${lot.companyName}</td>
+                <td class="p-5 font-bold text-slate-400 text-xs uppercase italic">${lot.endCustomerName || lot.companyName}</td>
+                <td class="p-5 text-center"><span class="bg-slate-100 px-3 py-1 rounded-lg text-[10px] font-black">${lot.total}</span></td>
                 <td class="p-5 text-right flex justify-end gap-1">
-                    <button onclick='exportToExcel(${JSON.stringify(l)})' class="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg"><i data-lucide="download" class="w-4 h-4"></i></button>
-                    <button onclick="window.location.href='admin_editor.html?id=${l.id}'" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                    <button onclick='downloadExcel(${JSON.stringify(lot)})' class="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"><i data-lucide="download" class="w-4 h-4"></i></button>
+                    <button onclick="window.location.href='admin_editor.html?id=${lot.id}'" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
                 </td>
             </tr>`;
         }
 
-        // --- UTILITIES ---
+        // --- UTILITY LOGIC ---
 
-        window.filterClientDropdown = (query) => {
-            const q = query.toLowerCase();
+        window.filterClientDropdown = (q) => {
+            const query = q.toLowerCase();
             const dropdown = document.getElementById('clientDropdown');
-            dropdown.innerHTML = `<option value="">-- Choose Customer --</option>`;
-            const filtered = allCustomers.filter(c => c.companyName.toLowerCase().includes(q));
+            dropdown.innerHTML = `<option value="">-- Choose Company --</option>`;
+            const filtered = allCustomers.filter(c => c.companyName.toLowerCase().includes(query));
             filtered.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c.id; opt.innerText = c.companyName;
-                dropdown.appendChild(opt);
+                const option = document.createElement('option');
+                option.value = c.id; option.innerText = c.companyName;
+                dropdown.appendChild(option);
             });
         };
 
-        window.clientPreviewUpdate = (cid) => {
-            const box = document.getElementById('previewBox');
-            const btn = document.getElementById('contBtn');
-            if(!cid) { box.classList.add('hidden'); btn.disabled = true; return; }
+        window.updatePreview = (cid) => {
+            const preview = document.getElementById('selectionPreview');
+            const btn = document.getElementById('btnContinue');
+            if(!cid) { preview.classList.add('hidden'); btn.disabled = true; return; }
             const client = allCustomers.find(c => c.id === cid);
-            document.getElementById('prevName').innerText = client.companyName;
-            document.getElementById('prevAddr').innerText = client.address || 'N/A';
-            box.classList.remove('hidden'); btn.disabled = false; selectedClientId = cid;
+            document.getElementById('previewName').innerText = client.companyName;
+            document.getElementById('previewAddress').innerText = client.address || 'Address not listed';
+            preview.classList.remove('hidden'); btn.disabled = false; selectedClientId = cid;
         };
 
-        window.goToEditor = () => { if(selectedClientId) window.location.href = `admin_editor.html?cid=${selectedClientId}`; };
+        window.startWithClient = () => { if(selectedClientId) window.location.href = `admin_editor.html?cid=${selectedClientId}`; };
 
-        window.filterAdminSRF = (q) => {
-            const t = q.toLowerCase();
-            const filtered = allLots.filter(l => l.srfId.toLowerCase().includes(t) || l.companyName.toLowerCase().includes(t));
-            document.getElementById('srfTableBody').innerHTML = filtered.map(l => createSRFRow(l)).join('');
+        window.filterSRFRecords = (q) => {
+            const term = q.toLowerCase();
+            const filtered = allLots.filter(l => l.srfId.toLowerCase().includes(term) || l.companyName.toLowerCase().includes(term));
+            document.getElementById('srfDataTable').innerHTML = filtered.map(l => buildSRFRow(l)).join('');
             lucide.createIcons();
         }
 
-        window.exportToExcel = (lot) => {
+        window.downloadExcel = (lot) => {
             let csv = "\uFEFFLot ID,Provider,Provider Address,End Customer,End Address,Job No,Instrument,Make,Model,ID No,Range,LC,Cal Date,Location\n";
             lot.items.forEach(i => {
                 const pA = (lot.address || "").replace(/\n/g, ' ').replace(/"/g, '""');
