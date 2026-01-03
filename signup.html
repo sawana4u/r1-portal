@@ -17,38 +17,38 @@
     <div class="w-full max-w-2xl bg-white p-8 md:p-12 rounded-[2.5rem] shadow-2xl border border-slate-100 my-8">
         <div class="text-center mb-8">
             <h1 class="text-2xl font-black uppercase text-slate-900 tracking-tight">R1 Tech Labs</h1>
-            <p class="text-[10px] font-bold text-indigo-600 uppercase tracking-[0.3em] mt-2">Create an account</p>
+            <p class="text-[10px] font-bold text-indigo-600 uppercase tracking-[0.3em] mt-2">New Customer Registration</p>
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <!-- Company Details Section -->
             <div class="md:col-span-2">
-                <p class="text-[10px] font-black uppercase text-slate-400 mb-3 ml-1 tracking-widest">Company Details (for Certificate)</p>
-                <input type="text" id="comp" class="form-input mb-4" placeholder="Name of Company *">
-                <textarea id="addr" class="form-input h-24 mb-4" placeholder="Full Address *"></textarea>
+                <p class="text-[10px] font-black uppercase text-slate-400 mb-3 ml-1 tracking-widest">Company Information</p>
+                <input type="text" id="comp" class="form-input mb-4" placeholder="Full Company Name *">
+                <textarea id="addr" class="form-input h-24 mb-4" placeholder="Physical Office Address *"></textarea>
                 <input type="text" id="gst" class="form-input" placeholder="GST Number (Optional)">
             </div>
 
-            <!-- Contact Person Details Section -->
+            <!-- Contact Person Section -->
             <div class="md:col-span-2 mt-2">
                 <p class="text-[10px] font-black uppercase text-slate-400 mb-3 ml-1 tracking-widest">Contact Person Details</p>
             </div>
-            <input type="text" id="cName" class="form-input" placeholder="Name of Person *">
+            <input type="text" id="cName" class="form-input" placeholder="Person Name *">
             <input type="text" id="cDesig" class="form-input" placeholder="Designation">
             <input type="text" id="cPhone" class="form-input" placeholder="Mobile Number *">
-            <input type="email" id="cEmail" class="form-input" placeholder="Official Email ID *">
+            <input type="email" id="cEmail" class="form-input" placeholder="Official Email *">
 
             <!-- Security Section -->
             <div class="md:col-span-2 mt-2">
-                <p class="text-[10px] font-black uppercase text-slate-400 mb-3 ml-1 tracking-widest">Login Details</p>
+                <p class="text-[10px] font-black uppercase text-slate-400 mb-3 ml-1 tracking-widest">Login Credentials</p>
             </div>
-            <input type="text" id="user" class="form-input" placeholder="Username *">
-            <input type="password" id="pass" class="form-input" placeholder="Password *">
+            <input type="text" id="user" class="form-input" placeholder="Choose Username *">
+            <input type="password" id="pass" class="form-input" placeholder="Set Password *">
         </div>
 
-        <button onclick="handleSignup()" id="signupBtn" class="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl uppercase text-xs mt-10 shadow-xl shadow-indigo-100 hover:bg-indigo-700 active:scale-[0.98] transition-all">Account Register Karein</button>
+        <button onclick="handleSignup()" id="signupBtn" class="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl uppercase text-xs mt-10 shadow-xl hover:bg-indigo-700 active:scale-[0.98] transition-all">Create Account</button>
         
-        <p class="text-center text-xs text-slate-400 mt-6">Already have an account? <a href="index.html" class="text-indigo-600 font-bold hover:underline">Login</a></p>
+        <p class="text-center text-xs text-slate-400 mt-6">Already have an account? <a href="index.html" class="text-indigo-600 font-bold hover:underline">Sign In</a></p>
     </div>
 
     <script type="module">
@@ -57,7 +57,6 @@
         import { doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         window.handleSignup = async () => {
-            // Saara data ek jagah jama kar rahe hain
             const signupData = {
                 comp: document.getElementById('comp').value.trim(),
                 addr: document.getElementById('addr').value.trim(),
@@ -66,13 +65,18 @@
                 cDesig: document.getElementById('cDesig').value.trim(),
                 cPhone: document.getElementById('cPhone').value.trim(),
                 cEmail: document.getElementById('cEmail').value.trim(),
-                user: document.getElementById('user').value.trim(),
+                user: document.getElementById('user').value.trim().toLowerCase(),
                 pass: document.getElementById('pass').value
             };
 
-            // Validation: Zaroori fields check kar rahe hain
+            // SECURITY: Block 'admin' keyword from usernames
+            if (signupData.user.includes('admin')) {
+                alert("Security Alert: Usernames containing 'admin' are not allowed.");
+                return;
+            }
+
             if(!signupData.comp || !signupData.addr || !signupData.user || !signupData.pass || !signupData.cName || !signupData.cPhone) {
-                alert("All stared (*) Fields are mandaratory !");
+                alert("Please fill all required fields!");
                 return;
             }
 
@@ -81,7 +85,6 @@
             btn.innerText = "Registering...";
 
             try {
-                // Firebase Auth mein user create kar rahe hain
                 const email = signupData.user + DOMAIN;
                 const cred = await createUserWithEmailAndPassword(auth, email, signupData.pass);
                 
@@ -97,21 +100,21 @@
                     role: 'customer'
                 };
 
-                // 1. User ki private folder mein data save kar rahe hain
+                // Save to private user folder
                 await setDoc(doc(db, 'artifacts', APP_ID, 'users', cred.user.uid, 'settings', 'profile'), profileData);
-
-                // 2. Admin ki public list mein data sync kar rahe hain
+                // Sync to public directory for Admin view
                 await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'customers', cred.user.uid), profileData);
 
-                alert("Account created successfully! ✅");
+                alert("Registration Successful! ✅");
                 window.location.href = 'dashboard.html';
             } catch (e) {
-                alert("Registration Error: " + e.message);
+                alert("Error: " + e.message);
                 btn.disabled = false;
-                btn.innerText = "Register an account";
+                btn.innerText = "Create Account";
             }
         };
     </script>
 </body>
 </html>
+
 
