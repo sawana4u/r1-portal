@@ -18,47 +18,69 @@
         .custom-scrollbar::-webkit-scrollbar { width: 5px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        #deleteModal { display: none; }
+        .modal-active { display: flex !important; }
     </style>
 </head>
 <body class="overflow-hidden">
 
-    <!-- HEADER -->
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] items-center justify-center p-6">
+        <div class="bg-white max-w-sm w-full rounded-[2.5rem] p-8 shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div class="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mb-6">
+                <i data-lucide="alert-triangle" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-xl font-black text-slate-800 mb-2">Delete Customer?</h3>
+            <p id="deleteMsg" class="text-xs font-bold text-slate-400 uppercase tracking-widest leading-relaxed mb-8">This action is permanent and cannot be undone.</p>
+            <div class="flex flex-col gap-3">
+                <button id="confirmDeleteBtn" class="w-full py-4 bg-red-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-red-600 transition-all">
+                    Delete Permanently
+                </button>
+                <button onclick="closeModal()" class="w-full py-4 bg-slate-50 text-slate-400 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-100 transition-all">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
     <header class="h-[72px] bg-white border-b border-slate-200 flex items-center justify-between px-6 sticky top-0 z-50">
         <div class="flex items-center gap-4">
             <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-100">
                 <i data-lucide="shield-check" class="text-white w-6 h-6"></i>
             </div>
             <div>
-                <h1 class="text-lg font-extrabold uppercase tracking-tighter">R1 Tech Labs</h1>
-                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Master Administration</p>
+                <h1 class="text-lg font-extrabold uppercase tracking-tighter text-slate-800">R1 Admin</h1>
+                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Master Control Panel</p>
             </div>
         </div>
-        <button onclick="logout()" class="px-5 py-2.5 bg-red-50 text-red-600 rounded-xl text-xs font-black uppercase hover:bg-red-600 hover:text-white transition-all shadow-sm">
+        <button onclick="logout()" class="px-5 py-2.5 bg-slate-50 text-slate-400 rounded-xl text-xs font-black uppercase hover:bg-red-50 hover:text-red-600 transition-all">
             Sign Out
         </button>
     </header>
 
     <div class="flex">
-        <!-- SIDEBAR -->
+        <!-- Sidebar -->
         <aside class="w-64 bg-white border-r border-slate-200 h-[calc(100vh-72px)] hidden md:flex flex-col py-6">
-            <p class="px-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Operations</p>
+            <p class="px-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Navigation</p>
             <nav class="flex-grow space-y-1">
-                <div onclick="switchView('create_srf')" id="nav-create_srf" class="nav-link px-6 py-4 flex items-center gap-3 font-bold text-indigo-600 text-sm">
-                    <i data-lucide="plus-circle" class="w-5 h-5"></i> Create New SRF
+                <div onclick="switchView('create_srf')" id="nav-create_srf" class="nav-link px-6 py-4 flex items-center gap-3 font-bold text-sm">
+                    <i data-lucide="plus-circle" class="w-5 h-5"></i> New SRF Entry
                 </div>
                 <div onclick="switchView('dashboard')" id="nav-dashboard" class="nav-link px-6 py-4 flex items-center gap-3 font-bold text-sm">
-                    <i data-lucide="layout-grid" class="w-5 h-5"></i> Dashboard Summary
+                    <i data-lucide="layout-grid" class="w-5 h-5"></i> Analytics
                 </div>
                 <div onclick="switchView('customers')" id="nav-customers" class="nav-link px-6 py-4 flex items-center gap-3 font-bold text-sm">
                     <i data-lucide="users" class="w-5 h-5"></i> Customer Directory
                 </div>
                 <div onclick="switchView('srf')" id="nav-srf" class="nav-link px-6 py-4 flex items-center gap-3 font-bold text-sm">
-                    <i data-lucide="list" class="w-5 h-5"></i> SRF Records
+                    <i data-lucide="list" class="w-5 h-5"></i> Master Records
                 </div>
             </nav>
         </aside>
 
-        <!-- MAIN CONTENT -->
+        <!-- Content Area -->
         <main class="flex-grow content-area bg-slate-50 p-8 custom-scrollbar">
             <div id="view-container"></div>
         </main>
@@ -70,7 +92,7 @@
         import { collection, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         let allLots = [], allCustomers = [], currentView = 'create_srf';
-        let selectedClientId = "";
+        let deleteId = null;
 
         onAuthStateChanged(auth, u => {
             if(!u || !u.email.startsWith('admin')) window.location.href = 'index.html';
@@ -105,92 +127,108 @@
 
         function refresh() { switchView(currentView); }
 
-        // --- CREATE SRF VIEW (LINKED TO EDITOR.HTML) ---
         function renderCreateSelection(c) {
             c.innerHTML = `
                 <div class="max-w-4xl mx-auto py-6">
-                    <div class="flex items-center gap-3 mb-10">
-                        <i data-lucide="file-plus-2" class="text-indigo-600 w-6 h-6"></i>
-                        <h2 class="text-2xl font-black text-slate-900 tracking-tight uppercase">New Service Request</h2>
-                    </div>
+                    <h2 class="text-2xl font-black text-slate-900 tracking-tight uppercase mb-10 flex items-center gap-3">
+                        <i data-lucide="file-plus" class="text-indigo-600"></i> New Service Request
+                    </h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div class="bg-white p-8 rounded-[2.5rem] border shadow-sm">
-                            <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-6"><i data-lucide="user-check" class="w-6 h-6"></i></div>
-                            <h3 class="font-black text-slate-800 uppercase text-sm mb-2">Registered Customer</h3>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-6">Start SRF for an existing client</p>
-                            <div class="space-y-4">
-                                <input type="text" oninput="filterDropdown(this.value)" placeholder="Quick search..." class="w-full px-4 py-2.5 bg-slate-50 border rounded-xl text-xs font-bold outline-none focus:border-indigo-600">
-                                <select id="clientDropdown" onchange="updatePreview(this.value)" class="w-full p-3.5 bg-white border rounded-xl text-xs font-bold outline-none focus:border-indigo-600">
-                                    <option value="">-- Choose Company --</option>
-                                    ${allCustomers.map(x => `<option value="${x.id}">${x.companyName}</option>`).join('')}
-                                </select>
-                            </div>
-                            <div id="selectionPreview" class="hidden mt-4 p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
-                                <h4 id="previewName" class="text-xs font-black text-indigo-700 uppercase"></h4>
-                                <p id="previewAddress" class="text-[9px] text-indigo-400 font-bold mt-1 truncate italic"></p>
-                            </div>
-                            <button id="btnContinue" onclick="startWithClient()" class="w-full mt-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase shadow-xl disabled:opacity-20 transition-all" disabled>
-                                Select and Continue
+                            <h3 class="font-black text-slate-800 uppercase text-sm mb-6">Existing Customer</h3>
+                            <select id="clientDropdown" onchange="updatePreview(this.value)" class="w-full p-3.5 bg-slate-50 border rounded-xl text-xs font-bold outline-none focus:border-indigo-600 mb-4">
+                                <option value="">-- Select Client --</option>
+                                ${allCustomers.map(x => `<option value="${x.id}">${x.companyName}</option>`).join('')}
+                            </select>
+                            <button id="btnContinue" onclick="startWithClient()" class="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase shadow-lg disabled:opacity-20" disabled>
+                                Select & Continue
                             </button>
                         </div>
-                        <div class="bg-white p-8 rounded-[2.5rem] border shadow-sm flex flex-col">
-                            <div class="w-12 h-12 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center mb-6"><i data-lucide="user-plus" class="w-6 h-6"></i></div>
-                            <h3 class="font-black text-slate-800 uppercase text-sm mb-2">Create New Client</h3>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-10">Start a blank entry for a new business</p>
-                            <div class="flex-grow"></div>
-                            <button onclick="window.location.href='create_client.html'" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase shadow-xl hover:bg-indigo-600 transition-all">
-                                Start New Client Entry
+                        <div class="bg-white p-8 rounded-[2.5rem] border shadow-sm flex flex-col justify-between">
+                            <div>
+                                <h3 class="font-black text-slate-800 uppercase text-sm mb-2">Register New Client</h3>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Add a new business to your directory</p>
+                            </div>
+                            <button onclick="window.location.href='create_client.html'" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase shadow-lg hover:bg-indigo-600 transition-all">
+                                Open Registration
                             </button>
                         </div>
                     </div>
                 </div>`;
         }
 
-        window.filterDropdown = (q) => {
-            const dropdown = document.getElementById('clientDropdown');
-            dropdown.innerHTML = `<option value="">-- Choose Company --</option>` + allCustomers.filter(c => c.companyName.toLowerCase().includes(q.toLowerCase())).map(x => `<option value="${x.id}">${x.companyName}</option>`).join('');
-        };
-
         window.updatePreview = (cid) => {
-            const preview = document.getElementById('selectionPreview');
             const btn = document.getElementById('btnContinue');
-            if(!cid) { preview.classList.add('hidden'); btn.disabled = true; return; }
-            const client = allCustomers.find(c => c.id === cid);
-            document.getElementById('previewName').innerText = client.companyName;
-            document.getElementById('previewAddress').innerText = client.address || 'Address not listed';
-            preview.classList.remove('hidden'); btn.disabled = false; selectedClientId = cid;
+            btn.disabled = !cid;
+            window.selectedClientId = cid;
         };
 
-        // REDIRECT TO EDITOR.HTML
         window.startWithClient = () => {
-            if(selectedClientId) window.location.href = `editor.html?cid=${selectedClientId}`;
+            if(window.selectedClientId) window.location.href = `editor.html?cid=${window.selectedClientId}`;
         };
 
-        // --- DASHBOARD SUMMARY ---
         function renderDashboard(c) {
-            c.innerHTML = `<div class="max-w-4xl mx-auto"><h2 class="text-2xl font-black mb-10 tracking-tight uppercase">System Summary</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div class="bg-white p-12 rounded-[3rem] border shadow-sm"><p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Total Lots</p><h3 class="text-6xl font-black mt-4 text-indigo-600">${allLots.length}</h3></div><div class="bg-white p-12 rounded-[3rem] border shadow-sm"><p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Total Clients</p><h3 class="text-6xl font-black mt-4 text-slate-800">${allCustomers.length}</h3></div></div></div>`;
+            c.innerHTML = `<div class="max-w-4xl mx-auto"><h2 class="text-2xl font-black mb-10 tracking-tight uppercase">Platform Stats</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div class="bg-white p-12 rounded-[3rem] border shadow-sm"><p class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Total SRF Lots</p><h3 class="text-6xl font-black mt-4 text-indigo-600">${allLots.length}</h3></div><div class="bg-white p-12 rounded-[3rem] border shadow-sm"><p class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Active Clients</p><h3 class="text-6xl font-black mt-4 text-slate-800">${allCustomers.length}</h3></div></div></div>`;
         }
 
-        // --- CUSTOMER LIST ---
         function renderCustomerList(c) {
-            c.innerHTML = `<div class="max-w-6xl mx-auto"><h2 class="text-2xl font-black mb-10 tracking-tight uppercase">Customer Directory</h2><div class="bg-white rounded-[2.5rem] border shadow-sm overflow-hidden"><table class="w-full text-left"><thead class="bg-slate-50 border-b"><tr><th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Company</th><th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Action</th></tr></thead><tbody>${allCustomers.map(cust => `<tr class="table-row"><td class="p-5 font-black text-xs text-slate-800 uppercase">${cust.companyName}</td><td class="p-5 text-right"><button onclick="window.location.href='create_client.html'" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button></td></tr>`).join('')}</tbody></table></div></div>`;
+            c.innerHTML = `
+                <div class="max-w-6xl mx-auto">
+                    <h2 class="text-2xl font-black mb-10 tracking-tight uppercase">Customer Directory</h2>
+                    <div class="bg-white rounded-[2.5rem] border shadow-sm overflow-hidden">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-50 border-b">
+                                <tr>
+                                    <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Company Name</th>
+                                    <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${allCustomers.map(cust => `
+                                    <tr class="table-row">
+                                        <td class="p-5 font-black text-xs text-slate-800 uppercase">${cust.companyName}</td>
+                                        <td class="p-5 text-right space-x-2">
+                                            <!-- LINKED TO NEW ADMIN EDIT PAGE -->
+                                            <button onclick="window.location.href='admin_edit_client.html?cid=${cust.id}'" class="p-2.5 text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all" title="Edit Profile">
+                                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                            </button>
+                                            <button onclick="confirmDeleteCustomer('${cust.id}', '${cust.companyName}')" class="p-2.5 text-red-400 hover:bg-red-50 rounded-xl transition-all" title="Delete Customer">
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                            </button>
+                                        </td>
+                                    </tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
         }
 
-        // --- SRF RECORDS ---
-        function renderSRFList(c) {
-            c.innerHTML = `<div class="max-w-7xl mx-auto"><div class="flex flex-col md:flex-row justify-between items-end gap-6 mb-10"><h2 class="text-2xl font-black text-slate-900 tracking-tight uppercase">Master History</h2><input type="text" oninput="filterSRF(this.value)" placeholder="Search ID or Customer..." class="px-6 py-4 bg-white border rounded-2xl text-xs font-bold outline-none focus:border-indigo-600 w-full md:w-96 shadow-sm"></div><div class="bg-white rounded-[2.5rem] border shadow-sm overflow-hidden"><table class="w-full text-left"><thead class="bg-slate-50 border-b"><tr><th class="p-5 text-[10px] font-black text-slate-400 uppercase">SRF ID</th><th class="p-5 text-[10px] font-black text-slate-400 uppercase">Provider</th><th class="p-5 text-[10px] font-black text-slate-400 uppercase text-right">Action</th></tr></thead><tbody id="srfDataTable">${allLots.map(l => `<tr class="table-row"><td class="p-5 font-black text-indigo-600 text-xs">${l.srfId}</td><td class="p-5 font-bold text-slate-800 text-xs uppercase">${l.companyName}</td><td class="p-5 text-right"><button onclick="window.location.href='editor.html?id=${l.id}'" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button></td></tr>`).join('')}</tbody></table></div></div>`;
-        }
-
-        window.filterSRF = (q) => {
-            const filtered = allLots.filter(l => l.srfId.toLowerCase().includes(q.toLowerCase()) || l.companyName.toLowerCase().includes(q.toLowerCase()));
-            document.getElementById('srfDataTable').innerHTML = filtered.map(l => `<tr class="table-row"><td class="p-5 font-black text-indigo-600 text-xs">${l.srfId}</td><td class="p-5 font-bold text-slate-800 text-xs uppercase">${l.companyName}</td><td class="p-5 text-right"><button onclick="window.location.href='editor.html?id=${l.id}'" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button></td></tr>`).join('');
-            lucide.createIcons();
+        window.confirmDeleteCustomer = (id, name) => {
+            deleteId = id;
+            document.getElementById('deleteMsg').innerText = `Are you sure you want to delete "${name}"?`;
+            document.getElementById('deleteModal').classList.add('modal-active');
         };
+
+        window.closeModal = () => {
+            document.getElementById('deleteModal').classList.remove('modal-active');
+            deleteId = null;
+        };
+
+        document.getElementById('confirmDeleteBtn').onclick = async () => {
+            if(!deleteId) return;
+            try {
+                await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'customers', deleteId));
+                closeModal();
+            } catch (e) { alert("Error deleting record."); }
+        };
+
+        function renderSRFList(c) {
+            c.innerHTML = `<div class="max-w-7xl mx-auto"><h2 class="text-2xl font-black text-slate-900 tracking-tight uppercase mb-10">Master SRF History</h2><div class="bg-white rounded-[2.5rem] border shadow-sm overflow-hidden"><table class="w-full text-left"><thead class="bg-slate-50 border-b"><tr><th class="p-5 text-[10px] font-black text-slate-400 uppercase">SRF ID</th><th class="p-5 text-[10px] font-black text-slate-400 uppercase">Customer</th><th class="p-5 text-[10px] font-black text-slate-400 uppercase text-right">Action</th></tr></thead><tbody>${allLots.map(l => `<tr class="table-row"><td class="p-5 font-black text-indigo-600 text-xs">${l.srfId}</td><td class="p-5 font-bold text-slate-800 text-xs uppercase">${l.companyName}</td><td class="p-5 text-right"><button onclick="window.location.href='editor.html?id=${l.id}'" class="p-2.5 text-indigo-600 hover:bg-indigo-50 rounded-xl"><i data-lucide="edit-3" class="w-4 h-4"></i></button></td></tr>`).join('')}</tbody></table></div></div>`;
+        }
 
         window.logout = () => signOut(auth).then(() => window.location.href = 'index.html');
         lucide.createIcons();
     </script>
 </body>
 </html>
-
 
