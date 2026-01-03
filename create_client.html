@@ -9,114 +9,72 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
         body { font-family: 'Outfit', sans-serif; background-color: #f8fafc; color: #1e293b; }
-        .form-input { width: 100%; padding: 0.875rem; background-color: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 1rem; outline: none; transition: all 0.2s; font-size: 0.875rem; font-weight: 600; }
+        .form-input { width: 100%; padding: 0.75rem 1rem; background-color: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 1rem; outline: none; transition: all 0.2s; font-size: 0.875rem; font-weight: 600; }
         .form-input:focus { border-color: #4f46e5; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.05); }
         .form-input:disabled { background-color: #f1f5f9; color: #94a3b8; cursor: not-allowed; border-style: dashed; }
-        .label-text { font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.1em; margin-left: 0.5rem; margin-bottom: 0.5rem; display: block; }
-        .card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 2.5rem; padding: 2.5rem; margin-bottom: 2rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05); }
-        .site-card { background: #fdfdff; border: 1.5px solid #eef2ff; padding: 1.5rem; border-radius: 1.5rem; position: relative; transition: all 0.3s ease; }
+        .label-text { font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.1em; margin-bottom: 0.5rem; display: block; }
+        .site-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 2rem; padding: 2rem; margin-bottom: 1.5rem; position: relative; transition: all 0.3s ease; }
+        .site-card:hover { border-color: #cbd5e1; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04); }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- Header Section -->
+    <!-- Header -->
     <header class="bg-white border-b border-slate-200 p-6 sticky top-0 z-50">
-        <div class="max-w-5xl mx-auto flex items-center justify-between">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-4">
                 <button onclick="history.back()" class="p-2.5 bg-slate-50 rounded-xl hover:bg-slate-100 transition-all text-slate-500">
                     <i data-lucide="chevron-left" class="w-6 h-6"></i>
                 </button>
                 <div>
-                    <h1 class="text-xl font-black uppercase tracking-tighter text-indigo-600">Register New Client</h1>
-                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Client Identity & Site Management</p>
+                    <h1 class="text-xl font-black uppercase tracking-tighter text-indigo-600">Client Registration</h1>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Multi-Site Management System</p>
                 </div>
             </div>
         </div>
     </header>
 
-    <main class="flex-grow max-w-5xl mx-auto w-full p-6 py-12">
+    <main class="flex-grow max-w-6xl mx-auto w-full p-6 py-12">
         
-        <!-- Section 1: Business Identity -->
-        <div class="card">
-            <p class="text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-8 flex items-center gap-2">
-                <i data-lucide="building" class="w-4 h-4"></i> Company Information
-            </p>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="md:col-span-2">
-                    <span class="label-text">Official Company Name *</span>
-                    <input type="text" id="compName" class="form-input" placeholder="Enter Business Name">
-                </div>
-                <div>
-                    <span class="label-text">GST Number</span>
-                    <input type="text" id="compGst" class="form-input uppercase" placeholder="Enter GSTIN">
-                </div>
-                <div>
-                    <span class="label-text">Business Email</span>
-                    <input type="email" id="compEmail" class="form-input" placeholder="email@company.com">
-                </div>
-            </div>
+        <!-- Section: Company Identity -->
+        <div class="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm mb-10">
+            <label class="label-text flex items-center gap-2">
+                <i data-lucide="building" class="w-3.5 h-3.5 text-indigo-600"></i> Official Company Name *
+            </label>
+            <input type="text" id="compName" class="form-input text-lg py-4 border-2" placeholder="e.g. Reliance Industries Ltd.">
         </div>
 
-        <!-- Section 2: Contact Person -->
-        <div class="card">
-            <p class="text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-8 flex items-center gap-2">
-                <i data-lucide="user-2" class="w-4 h-4"></i> Primary Contact
-            </p>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                    <span class="label-text">Full Name *</span>
-                    <input type="text" id="cPerson" class="form-input" placeholder="Name">
-                </div>
-                <div>
-                    <span class="label-text">Designation</span>
-                    <input type="text" id="cDesig" class="form-input" placeholder="Role">
-                </div>
-                <div>
-                    <span class="label-text">Mobile Number *</span>
-                    <input type="text" id="cPhone" class="form-input" placeholder="+91">
-                </div>
+        <!-- Section: Sites Header -->
+        <div class="flex justify-between items-center mb-6 px-4">
+            <div>
+                <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">Site Locations</h3>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Register specific branches or plants</p>
             </div>
-        </div>
-
-        <!-- Section 3: Billing & Site Management -->
-        <div class="card">
-            <div class="flex justify-between items-center mb-8">
-                <p class="text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] flex items-center gap-2">
-                    <i data-lucide="map-pin" class="w-4 h-4"></i> Location Management
-                </p>
-                <button onclick="addSiteRow()" class="flex items-center gap-2 text-[10px] font-black uppercase text-indigo-600 bg-indigo-50 px-4 py-2 rounded-xl hover:bg-indigo-600 hover:text-white transition-all">
-                    <i data-lucide="plus-circle" class="w-4 h-4"></i> Add Extra Site Address
-                </button>
-            </div>
-
-            <!-- Main Billing Address -->
-            <div class="space-y-6">
-                <div>
-                    <span class="label-text">Main Billing Address *</span>
-                    <textarea id="billAddr" oninput="syncAllCheckedSites()" class="form-input h-24 resize-none" placeholder="Enter Registered Billing Address"></textarea>
-                </div>
-
-                <div class="h-[1px] bg-slate-100 my-6"></div>
-
-                <!-- Sites Container -->
-                <div id="sitesContainer" class="space-y-4">
-                    <!-- Dynamic Site rows injected here -->
-                </div>
-
-                <!-- Empty State Hint -->
-                <div id="emptyHint" class="py-12 text-center bg-slate-50 rounded-3xl border-2 border-dashed border-slate-100">
-                    <p class="text-[10px] font-black text-slate-300 uppercase tracking-widest">No additional sites registered</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Submission Buttons -->
-        <div class="flex flex-col md:flex-row gap-4 mb-16">
-            <button onclick="saveClient()" id="saveBtn" class="flex-grow bg-indigo-600 text-white font-black py-5 rounded-[1.5rem] uppercase text-xs tracking-widest shadow-2xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-3">
-                <i data-lucide="save" class="w-5 h-5"></i> Create Client Profile
+            <button onclick="addSiteRow()" class="flex items-center gap-2 text-[11px] font-black uppercase text-white bg-indigo-600 px-6 py-3 rounded-2xl hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all">
+                <i data-lucide="plus-circle" class="w-4 h-4"></i> Add Site Address
             </button>
-            <button onclick="history.back()" class="px-10 py-5 bg-white border border-slate-200 text-slate-400 font-black rounded-[1.5rem] uppercase text-xs tracking-widest hover:bg-slate-50 transition-all">
-                Discard
+        </div>
+
+        <!-- Sites Container -->
+        <div id="sitesContainer" class="space-y-6">
+            <!-- Site Rows Injected Here -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyHint" class="py-20 text-center bg-white rounded-[2.5rem] border-2 border-dashed border-slate-100 mb-10">
+            <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="map-pin" class="text-slate-300 w-8 h-8"></i>
+            </div>
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">No sites added. Click "Add Site Address" to begin.</p>
+        </div>
+
+        <!-- Final Action Footer -->
+        <div class="flex flex-col md:flex-row gap-4 mt-12 mb-24">
+            <button onclick="saveClient()" id="saveBtn" class="flex-grow bg-indigo-600 text-white font-black py-5 rounded-[1.5rem] uppercase text-xs tracking-widest shadow-2xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-3">
+                <i data-lucide="save" class="w-5 h-5"></i> Register Company Profile
+            </button>
+            <button onclick="history.back()" class="px-12 py-5 bg-white border border-slate-200 text-slate-400 font-black rounded-[1.5rem] uppercase text-xs tracking-widest hover:bg-slate-50 transition-all">
+                Cancel
             </button>
         </div>
     </main>
@@ -126,12 +84,14 @@
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Auth Protection
+        // Auth Gate
         onAuthStateChanged(auth, u => {
             if(!u || !u.email.startsWith('admin')) window.location.href = 'index.html';
         });
 
-        // Add a new Site Row Logic
+        /**
+         * Logic to add a new comprehensive site row
+         */
         window.addSiteRow = () => {
             document.getElementById('emptyHint').classList.add('hidden');
             const container = document.getElementById('sitesContainer');
@@ -139,21 +99,60 @@
             
             const div = document.createElement('div');
             div.id = rowId;
-            div.className = "site-card animate-in fade-in slide-in-from-top-2";
+            div.className = "site-card animate-in fade-in slide-in-from-bottom-4 duration-300";
             div.innerHTML = `
-                <div class="flex flex-col gap-4">
-                    <div class="flex justify-between items-center">
-                        <label class="flex items-center gap-2 cursor-pointer group">
-                            <input type="checkbox" onchange="toggleSiteSync('${rowId}')" class="site-sync-check w-4 h-4 accent-indigo-600">
-                            <span class="text-[10px] font-bold uppercase text-slate-400 group-hover:text-indigo-600 transition-colors">Same as Billing Address</span>
-                        </label>
-                        <button onclick="removeSiteRow('${rowId}')" class="text-slate-300 hover:text-red-500 transition-colors">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        </button>
+                <!-- Remove Button -->
+                <button onclick="removeSiteRow('${rowId}')" class="absolute top-6 right-6 text-slate-300 hover:text-red-500 transition-all">
+                    <i data-lucide="trash-2" class="w-5 h-5"></i>
+                </button>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    
+                    <!-- A: Site Address -->
+                    <div>
+                        <span class="label-text">A. Site Address *</span>
+                        <textarea class="form-input h-24 resize-none site-addr" oninput="syncBilling('${rowId}')" placeholder="Complete Location/Site Address"></textarea>
+                    </div>
+
+                    <!-- B: Billing Address -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="label-text mb-0">B. Billing Address *</span>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" onchange="toggleSync('${rowId}')" class="sync-check w-4 h-4 accent-indigo-600">
+                                <span class="text-[9px] font-black uppercase text-slate-400">Same as Site</span>
+                            </label>
+                        </div>
+                        <textarea class="form-input h-24 resize-none bill-addr" placeholder="Billing Address for Invoicing"></textarea>
+                    </div>
+
+                    <!-- C: GST Number -->
+                    <div>
+                        <span class="label-text">C. GST Number</span>
+                        <input type="text" class="form-input uppercase gst-no" placeholder="Enter GSTIN">
+                    </div>
+
+                    <!-- Divider for Contacts -->
+                    <div class="md:col-span-2 border-t border-slate-100 pt-6 mt-2">
+                        <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-6">Contact Information for this Site</p>
+                    </div>
+
+                    <!-- D, E, F, G: Contact Info -->
+                    <div>
+                        <span class="label-text">D. Contact Person Name *</span>
+                        <input type="text" class="form-input person-name" placeholder="Full Name">
                     </div>
                     <div>
-                        <span class="label-text">Site Location Address</span>
-                        <textarea class="form-input h-20 resize-none site-addr-input" placeholder="Enter Site / Plant Address"></textarea>
+                        <span class="label-text">E. Contact Person Designation</span>
+                        <input type="text" class="form-input person-desig" placeholder="e.g. Plant Head">
+                    </div>
+                    <div>
+                        <span class="label-text">F. Contact Person Mobile *</span>
+                        <input type="text" class="form-input person-phone" placeholder="+91">
+                    </div>
+                    <div>
+                        <span class="label-text">G. Contact Person Email</span>
+                        <input type="email" class="form-input person-email" placeholder="email@site.com">
                     </div>
                 </div>
             `;
@@ -161,7 +160,6 @@
             lucide.createIcons();
         };
 
-        // Remove row
         window.removeSiteRow = (id) => {
             document.getElementById(id).remove();
             if(document.getElementById('sitesContainer').children.length === 0) {
@@ -169,75 +167,87 @@
             }
         };
 
-        // SYNC LOGIC: When checkbox is clicked
-        window.toggleSiteSync = (rowId) => {
+        /**
+         * Sync Logic: Copies Site Address to Billing Address
+         */
+        window.toggleSync = (rowId) => {
             const row = document.getElementById(rowId);
-            const isChecked = row.querySelector('.site-sync-check').checked;
-            const input = row.querySelector('.site-addr-input');
-            const billingVal = document.getElementById('billAddr').value;
-
+            const isChecked = row.querySelector('.sync-check').checked;
+            const siteVal = row.querySelector('.site-addr').value;
+            const billInput = row.querySelector('.bill-addr');
+            
             if(isChecked) {
-                input.value = billingVal; // Immediate copy
-                input.disabled = true;    // Lock the field
+                billInput.value = siteVal;
+                billInput.disabled = true;
             } else {
-                input.disabled = false;   // Unlock if unchecked
+                billInput.disabled = false;
             }
         };
 
-        // LIVE SYNC: When main billing address changes
-        window.syncAllCheckedSites = () => {
-            const billingVal = document.getElementById('billAddr').value;
-            const rows = document.querySelectorAll('.site-card');
-            rows.forEach(row => {
-                const isChecked = row.querySelector('.site-sync-check').checked;
-                if(isChecked) {
-                    row.querySelector('.site-addr-input').value = billingVal;
-                }
-            });
+        window.syncBilling = (rowId) => {
+            const row = document.getElementById(rowId);
+            const isChecked = row.querySelector('.sync-check').checked;
+            if(isChecked) {
+                row.querySelector('.bill-addr').value = row.querySelector('.site-addr').value;
+            }
         };
 
-        // Save to Database
+        /**
+         * Save to Firebase
+         */
         window.saveClient = async () => {
-            const name = document.getElementById('compName').value.trim();
-            const billing = document.getElementById('billAddr').value.trim();
-            const contact = document.getElementById('cPerson').value.trim();
-            const phone = document.getElementById('cPhone').value.trim();
-
-            if(!name || !billing || !contact || !phone) {
-                alert("Please fill all required fields (*)");
-                return;
-            }
-
-            const btn = document.getElementById('saveBtn');
-            btn.disabled = true; btn.innerText = "Saving Profile...";
+            const compName = document.getElementById('compName').value.trim();
+            if(!compName) return alert("Please enter the Official Company Name.");
 
             const siteCards = document.querySelectorAll('.site-card');
-            const additionalSites = Array.from(siteCards).map(card => ({
-                address: card.querySelector('.site-addr-input').value.trim(),
-                isSameAsBilling: card.querySelector('.site-sync-check').checked
-            })).filter(s => s.address);
+            if(siteCards.length === 0) return alert("Please add at least one site address.");
+
+            const btn = document.getElementById('saveBtn');
+            btn.disabled = true;
+            btn.innerText = "Processing Data...";
+
+            // Collect all site data objects
+            const sites = Array.from(siteCards).map(card => ({
+                siteAddress: card.querySelector('.site-addr').value.trim(),
+                billingAddress: card.querySelector('.bill-addr').value.trim(),
+                gstNo: card.querySelector('.gst-no').value.trim().toUpperCase(),
+                contactName: card.querySelector('.person-name').value.trim(),
+                contactDesig: card.querySelector('.person-desig').value.trim(),
+                contactPhone: card.querySelector('.person-phone').value.trim(),
+                contactEmail: card.querySelector('.person-email').value.trim()
+            }));
+
+            // Validate mandatory fields in each site
+            for(let i=0; i<sites.length; i++) {
+                if(!sites[i].siteAddress || !sites[i].billingAddress || !sites[i].contactName || !sites[i].contactPhone) {
+                    alert(`Incomplete details in Site Row #${i+1}. Please fill Site, Billing, Name and Mobile.`);
+                    btn.disabled = false; btn.innerText = "Register Company Profile";
+                    return;
+                }
+            }
 
             const payload = {
-                companyName: name,
-                address: billing, 
-                billingAddress: billing,
-                gstNo: document.getElementById('compGst').value.trim().toUpperCase(),
-                officialEmail: document.getElementById('compEmail').value.trim(),
-                contactPerson: contact,
-                designation: document.getElementById('cDesig').value.trim(),
-                phone: phone,
-                additionalSites: additionalSites,
+                companyName: compName,
+                // Primary data (from first site for directory view)
+                address: sites[0].siteAddress,
+                gstNo: sites[0].gstNo,
+                contactPerson: sites[0].contactName,
+                phone: sites[0].contactPhone,
+                officialEmail: sites[0].contactEmail,
+                // Full site array
+                allSites: sites,
                 createdAt: serverTimestamp(),
                 role: 'customer'
             };
 
             try {
                 const docRef = await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'customers'), payload);
-                alert("Client Profile Created! ✅");
+                alert("Client Profile Created with " + sites.length + " sites! ✅");
                 window.location.href = `admin_editor.html?cid=${docRef.id}`;
             } catch (e) {
-                alert("Cloud Error: " + e.message);
-                btn.disabled = false; btn.innerText = "Create Client Profile";
+                alert("Failed to save: " + e.message);
+                btn.disabled = false;
+                btn.innerText = "Register Company Profile";
             }
         };
 
@@ -245,4 +255,5 @@
     </script>
 </body>
 </html>
+
 
