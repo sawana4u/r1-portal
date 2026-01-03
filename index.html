@@ -4,99 +4,149 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | R1 Tech Labs</title>
+    <!-- Tailwind CSS for modern styling -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons for professional UI elements -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
         body { font-family: 'Outfit', sans-serif; background-color: #f8fafc; }
+        .login-card { transition: all 0.3s ease; border: 1px solid #f1f5f9; }
+        .input-field { transition: all 0.2s ease; border: 2px solid transparent; }
+        .input-field:focus { border-color: #4f46e5; background-color: white; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.05); }
     </style>
 </head>
 <body class="bg-slate-50 flex items-center justify-center min-h-screen p-6">
-    <div class="w-full max-w-md bg-white p-10 rounded-[2.5rem] shadow-2xl relative border border-slate-100">
+
+    <div class="w-full max-w-md bg-white p-10 rounded-[2.5rem] shadow-2xl relative login-card">
         
-        <!-- Toggle Button for Admin/Customer -->
-        <button id="adminToggle" onclick="toggleMode()" class="absolute top-6 right-6 text-[10px] font-black uppercase bg-slate-100 text-slate-500 px-4 py-2 rounded-xl hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
+        <!-- Toggle for Admin/Customer Mode -->
+        <button id="modeToggle" onclick="toggleMode()" class="absolute top-6 right-6 text-[10px] font-black uppercase bg-slate-100 text-slate-500 px-4 py-2 rounded-xl hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
             Admin Login
         </button>
 
         <div class="text-center mb-10">
-            <h1 class="text-3xl font-black uppercase text-slate-900 tracking-tighter text-indigo-600">R1 Tech Labs</h1>
-            <p id="modeText" class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-2">Customer Portal</p>
+            <!-- Branding -->
+            <div class="w-16 h-16 bg-indigo-600 rounded-[1.5rem] flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-100">
+                <i data-lucide="shield-check" class="text-white w-8 h-8"></i>
+            </div>
+            <h1 class="text-3xl font-black uppercase text-slate-900 tracking-tighter">R1 Tech Labs</h1>
+            <p id="modeDescription" class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-2">Customer Access Portal</p>
         </div>
 
-        <!-- Login Form -->
+        <!-- Authentication Form -->
         <div class="space-y-5">
             <div>
                 <label class="text-[10px] font-black text-slate-400 uppercase ml-2 mb-1 block">Username</label>
-                <input type="text" id="user" class="w-full p-4 bg-slate-50 border-2 border-transparent rounded-2xl outline-none focus:border-indigo-500 focus:bg-white transition-all" placeholder="Enter Username">
+                <div class="relative">
+                    <i data-lucide="user" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300"></i>
+                    <input type="text" id="username" class="w-full pl-12 pr-4 py-4 bg-slate-50 rounded-2xl outline-none input-field font-bold text-slate-700" placeholder="Enter your username">
+                </div>
             </div>
+
             <div>
                 <label class="text-[10px] font-black text-slate-400 uppercase ml-2 mb-1 block">Password</label>
-                <input type="password" id="pass" class="w-full p-4 bg-slate-50 border-2 border-transparent rounded-2xl outline-none focus:border-indigo-500 focus:bg-white transition-all" placeholder="••••••••">
+                <div class="relative">
+                    <i data-lucide="lock" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300"></i>
+                    <input type="password" id="password" class="w-full pl-12 pr-4 py-4 bg-slate-50 rounded-2xl outline-none input-field font-bold text-slate-700" placeholder="••••••••">
+                </div>
             </div>
             
-            <button onclick="handleLogin()" id="loginBtn" class="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-indigo-100 uppercase tracking-widest text-xs active:scale-95 transition-all mt-4">
-                Sign In
+            <button onclick="handleLogin()" id="loginBtn" class="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-indigo-100 uppercase tracking-widest text-xs active:scale-95 transition-all mt-4 flex items-center justify-center gap-2">
+                Sign In <i data-lucide="chevron-right" class="w-4 h-4"></i>
             </button>
 
-            <div id="signupLinkArea" class="text-center pt-4">
-                <p class="text-xs text-slate-400">No account? <a href="signup.html" class="text-indigo-600 font-bold hover:underline">Register Business</a></p>
+            <!-- Registration Link -->
+            <div id="signupRedirect" class="text-center pt-4">
+                <p class="text-xs text-slate-400 font-medium">New business partner? <a href="signup.html" class="text-indigo-600 font-bold hover:underline">Register Now</a></p>
             </div>
         </div>
     </div>
 
+    <!-- Firebase Logic -->
     <script type="module">
-        import { auth, DOMAIN } from './config.js';
+        import { auth, db, APP_ID, DOMAIN } from './config.js';
         import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         let isAdminMode = false;
 
-        // Switches between Customer and Admin login views
+        /**
+         * Toggle between Customer and Administrator login views
+         */
         window.toggleMode = () => {
             isAdminMode = !isAdminMode;
-            const btn = document.getElementById('adminToggle');
-            const modeText = document.getElementById('modeText');
-            const signupArea = document.getElementById('signupLinkArea');
+            const btn = document.getElementById('modeToggle');
+            const desc = document.getElementById('modeDescription');
+            const signupLink = document.getElementById('signupRedirect');
 
             if(isAdminMode) {
                 btn.innerText = "Customer Login";
                 btn.className = "absolute top-6 right-6 text-[10px] font-black uppercase bg-indigo-600 text-white px-4 py-2 rounded-xl shadow-lg";
-                modeText.innerText = "Administrator Access";
-                signupArea.classList.add('hidden');
+                desc.innerText = "Administrator Master Control";
+                signupLink.classList.add('hidden');
             } else {
                 btn.innerText = "Admin Login";
                 btn.className = "absolute top-6 right-6 text-[10px] font-black uppercase bg-slate-100 text-slate-500 px-4 py-2 rounded-xl shadow-sm";
-                modeText.innerText = "Customer Portal";
-                signupArea.classList.remove('hidden');
+                desc.innerText = "Customer Access Portal";
+                signupLink.classList.remove('hidden');
             }
         };
 
+        /**
+         * Main Login Execution
+         */
         window.handleLogin = async () => {
-            const u = document.getElementById('user').value.trim().toLowerCase();
-            const p = document.getElementById('pass').value;
-            const loginBtn = document.getElementById('loginBtn');
+            const user = document.getElementById('username').value.trim().toLowerCase();
+            const pass = document.getElementById('password').value;
+            const btn = document.getElementById('loginBtn');
 
-            if(!u || !p) { alert("Please fill details!"); return; }
+            if(!user || !pass) {
+                alert("Please enter both Username and Password.");
+                return;
+            }
 
-            loginBtn.disabled = true;
-            loginBtn.innerText = "Verifying...";
+            btn.disabled = true;
+            btn.innerText = "Verifying Identity...";
 
             try {
-                const email = u + DOMAIN;
-                await signInWithEmailAndPassword(auth, email, p);
-                
-                // Redirect based on selected mode
+                // Construct virtual email for Firebase Auth
+                const email = user + DOMAIN;
+                const userCredential = await signInWithEmailAndPassword(auth, email, pass);
+                const loggedInUser = userCredential.user;
+
                 if(isAdminMode) {
-                    window.location.href = 'admin.html';
+                    // Safety check: Ensure the username starts with 'admin'
+                    if(user.startsWith('admin')) {
+                        window.location.href = 'admin.html';
+                    } else {
+                        alert("Unauthorized: This account does not have Administrator privileges.");
+                        btn.disabled = false;
+                        btn.innerText = "Sign In";
+                    }
                 } else {
-                    window.location.href = 'dashboard.html';
+                    // Logic for Customers: Check if profile is complete
+                    const profileRef = doc(db, 'artifacts', APP_ID, 'users', loggedInUser.uid, 'settings', 'profile');
+                    const profileSnap = await getDoc(profileRef);
+
+                    if(profileSnap.exists()) {
+                        // Profile is complete, take to Dashboard
+                        window.location.href = 'dashboard.html';
+                    } else {
+                        // Profile missing, force Step 2: create_client.html
+                        window.location.href = 'create_client.html';
+                    }
                 }
-            } catch (e) {
-                alert("Login Failed: Incorrect Username or Password.");
-                loginBtn.disabled = false;
-                loginBtn.innerText = "Sign In";
+            } catch (error) {
+                console.error("Login Error:", error);
+                alert("Authentication Failed: Invalid Username or Password.");
+                btn.disabled = false;
+                btn.innerText = "Sign In";
             }
         };
+
+        // Initialize Icons
+        lucide.createIcons();
     </script>
 </body>
 </html>
