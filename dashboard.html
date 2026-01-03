@@ -3,58 +3,152 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | R1 Techlabs</title>
+    <title>Dashboard | R1 Tech Labs</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
+        body { font-family: 'Outfit', sans-serif; background-color: #f8fafc; }
+        .lot-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .lot-card:hover { transform: translateY(-5px); border-color: #4f46e5; }
+    </style>
 </head>
-<body class="bg-slate-100 min-h-screen">
-    <!-- header -->
-<header class="bg-slate-900 p-6 text-white flex justify-between items-center shadow-xl">
-    <div class="flex items-center gap-3">
-        <h1 class="font-black uppercase tracking-tighter">R1 Dashboard</h1>
-    </div>
-    <div class="flex items-center gap-2">
-        <!--Profile Button -->
-        <a href="profile.html" class="bg-slate-800 p-2.5 rounded-xl border border-slate-700 hover:bg-indigo-600 transition-all"><i data-lucide="user" class="w-5 h-5"></i></a>
-        <button onclick="signOut()" class="bg-slate-800 p-2.5 rounded-xl border border-slate-700 hover:bg-red-600 transition-all"><i data-lucide="log-out" class="w-5 h-5"></i></button>
-    </div>
-</header>
+<body class="min-h-screen flex flex-col">
 
-    <main class="max-w-7xl mx-auto p-6">
-        <div class="flex justify-between items-center mb-8">
-            <h2 class="text-2xl font-black">My Lots</h2>
-            <a href="editor.html" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black text-xs uppercase shadow-xl">+ New SRF Lot</a>
+    <!-- Header -->
+    <header class="bg-slate-900 p-5 text-white flex justify-between items-center shadow-2xl sticky top-0 z-50">
+        <div class="flex items-center gap-3">
+            <div class="p-2 bg-indigo-600 rounded-lg">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+            </div>
+            <h1 class="font-black uppercase tracking-tighter text-lg">R1 Dashboard</h1>
         </div>
-        <div id="lotList" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+        <div class="flex items-center gap-3">
+            <a href="profile.html" class="bg-slate-800 p-2.5 rounded-xl border border-slate-700 hover:bg-indigo-600 transition-all flex items-center gap-2">
+                <i data-lucide="user" class="w-5 h-5"></i>
+                <span class="text-[10px] font-bold uppercase hidden md:block">Profile</span>
+            </a>
+            <button onclick="signOut()" class="bg-slate-800 p-2.5 rounded-xl border border-slate-700 hover:bg-red-600 transition-all">
+                <i data-lucide="log-out" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-6 w-full">
+        <!-- Action Bar -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+            <div>
+                <h2 class="text-3xl font-black text-slate-900 tracking-tight">My History</h2>
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Manage your calibration lots</p>
+            </div>
+            <a href="editor.html" class="w-full md:w-auto bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-3 active:scale-95">
+                <i data-lucide="plus-circle" class="w-5 h-5"></i> New SRF Lot
+            </a>
+        </div>
+
+        <!-- Lot List -->
+        <div id="lotList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Cards will be injected here -->
+        </div>
+
+        <!-- Loader / Empty Msg -->
+        <div id="statusArea" class="py-20 text-center hidden">
+            <div id="loader" class="hidden">
+                <div class="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+            </div>
+            <div id="emptyMsg" class="hidden text-slate-300">
+                <i data-lucide="folder-search" class="w-16 h-16 mx-auto mb-4 opacity-20"></i>
+                <p class="font-bold uppercase tracking-widest text-[10px]">No records found yet</p>
+            </div>
+        </div>
     </main>
 
     <script type="module">
         import { auth, db, APP_ID } from './config.js';
         import { onAuthStateChanged, signOut as firebaseSignOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { collection, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         onAuthStateChanged(auth, u => {
-            if(!u) window.location.href = 'index.html';
-            fetchHistory(u.email);
-            lucide.createIcons();
+            if(!u) {
+                window.location.href = 'index.html';
+            } else {
+                fetchHistory(u.email);
+            }
         });
 
         function fetchHistory(email) {
+            const statusArea = document.getElementById('statusArea');
+            const loader = document.getElementById('loader');
+            const emptyMsg = document.getElementById('emptyMsg');
+            const list = document.getElementById('lotList');
+
+            statusArea.classList.remove('hidden');
+            loader.classList.remove('hidden');
+
             const ref = collection(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots');
+            
             onSnapshot(ref, snap => {
-                const list = document.getElementById('lotList'); list.innerHTML = '';
-                snap.docs.filter(d => d.data().userEmail === email).forEach(d => {
-                    const l = d.data();
-                    list.innerHTML += `
-                        <div class="bg-white p-6 rounded-[2rem] border-2 border-slate-50 shadow-sm">
-                            <h3 class="text-xl font-black text-slate-800">${l.srfId}</h3>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase mt-1 mb-4">${l.createdAt ? new Date(l.createdAt.toDate()).toLocaleDateString() : 'Syncing'}</p>
-                            <div class="bg-slate-50 p-4 rounded-2xl text-sm font-black text-slate-700">${l.total} Instruments</div>
-                        </div>`;
+                loader.classList.add('hidden');
+                list.innerHTML = '';
+                
+                // Filter by user email
+                const userLots = snap.docs
+                    .map(d => ({ id: d.id, ...d.data() }))
+                    .filter(d => d.userEmail === email);
+
+                // SORTING: Newest first
+                userLots.sort((a, b) => {
+                    const dateA = a.createdAt?.seconds || 0;
+                    const dateB = b.createdAt?.seconds || 0;
+                    return dateB - dateA;
                 });
+
+                if (userLots.length === 0) {
+                    emptyMsg.classList.remove('hidden');
+                } else {
+                    emptyMsg.classList.add('hidden');
+                    statusArea.classList.add('hidden');
+                    
+                    userLots.forEach(l => {
+                        const dateStr = l.createdAt ? new Date(l.createdAt.toDate()).toLocaleDateString('en-GB', {
+                            day: '2-digit', month: 'short', year: 'numeric'
+                        }) : 'Syncing...';
+
+                        list.innerHTML += `
+                            <div class="bg-white p-8 rounded-[2.5rem] border-2 border-slate-50 shadow-sm lot-card flex flex-col h-full">
+                                <div class="flex justify-between items-start mb-6">
+                                    <div>
+                                        <h3 class="text-2xl font-black text-slate-800 tracking-tighter">${l.srfId}</h3>
+                                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">${dateStr}</p>
+                                    </div>
+                                    <span class="bg-indigo-50 text-indigo-600 text-[10px] font-black px-3 py-1 rounded-lg uppercase">Active</span>
+                                </div>
+                                <div class="bg-slate-50 p-5 rounded-2xl flex-grow mb-6 flex items-center gap-4">
+                                    <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-indigo-600 shadow-sm">
+                                        <i data-lucide="package" class="w-6 h-6"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-xl font-black text-slate-800">${l.total}</p>
+                                        <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Instruments</p>
+                                    </div>
+                                </div>
+                                <button onclick="window.location.href='editor.html?id=${l.id}'" class="w-full py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 border-2 border-slate-100 rounded-[1.5rem] hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all">
+                                    View or Edit Data
+                                </button>
+                            </div>`;
+                    });
+                }
+                lucide.createIcons();
             });
         }
-        window.signOut = () => firebaseSignOut(auth);
+
+        window.signOut = () => {
+            if(confirm("Sign out karna chahte hain?")) {
+                firebaseSignOut(auth);
+            }
+        };
+        
+        lucide.createIcons();
     </script>
 </body>
 </html>
