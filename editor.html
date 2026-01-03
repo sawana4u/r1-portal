@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,11 +14,22 @@
         .grid-input { width: 100%; padding: 8px; border: 1.5px solid #e2e8f0; font-size: 11px; outline: none; border-radius: 6px; }
         .grid-input:focus { border-color: #4f46e5; background-color: #f5f3ff; }
         .sticky-col { position: sticky; left: 0; background: #fff; z-index: 10; border-right: 2px solid #f1f5f9; }
+        .btn-action { transition: all 0.2s; display: flex; align-items: center; gap: 8px; font-weight: 800; text-transform: uppercase; font-size: 10px; padding: 10px 16px; border-radius: 12px; }
+        .control-btn { padding: 6px; border-radius: 8px; transition: all 0.2s; color: #94a3b8; }
+        .control-btn:hover { background-color: #f1f5f9; color: #4f46e5; }
+        .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- Header -->
+    <!-- Page Loader -->
+    <div id="pageLoader" class="fixed inset-0 bg-white z-[500] flex flex-col items-center justify-center">
+        <div class="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+        <p class="mt-4 text-slate-500 font-bold text-xs uppercase tracking-widest">Preparing Workspace...</p>
+    </div>
+
+    <!-- Navigation Header -->
     <header class="bg-white border-b p-4 shadow-sm flex flex-col lg:flex-row justify-between items-center gap-4 sticky top-0 z-50">
         <div class="flex items-center gap-4">
             <button onclick="history.back()" class="p-2 bg-slate-100 rounded-lg hover:bg-slate-200"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
@@ -26,44 +38,58 @@
                 <span class="text-slate-400 font-bold">/</span>
                 <input type="text" id="srfLotNo" class="bg-indigo-50 border-2 border-indigo-200 p-2 rounded-lg text-xs font-black w-20 text-center text-indigo-600 uppercase" placeholder="Lot">
             </div>
+            
             <div class="flex gap-2 ml-4">
-                <button onclick="downloadTemplate()" class="px-4 py-2 bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase border border-emerald-200 rounded-xl hover:bg-emerald-100">Template</button>
-                <label class="px-4 py-2 bg-blue-50 text-blue-700 text-[10px] font-black uppercase border border-blue-200 rounded-xl cursor-pointer hover:bg-blue-100">
-                    Upload
-                    <input type="file" id="xlUp" class="hidden" accept=".xlsx,.xls,.csv" onchange="importExcel(event)">
+                <button onclick="downloadTemplate()" class="btn-action bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100">
+                    <i data-lucide="download" class="w-4 h-4"></i> Template
+                </button>
+                <label class="btn-action bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 cursor-pointer">
+                    <i data-lucide="file-up" class="w-4 h-4"></i> Import Excel
+                    <input type="file" id="excelUpload" class="hidden" accept=".xlsx, .xls, .csv" onchange="importExcel(event)">
                 </label>
             </div>
         </div>
+
         <div class="flex gap-2">
-            <button onclick="addRow()" class="px-5 py-3 border-2 border-indigo-600 text-indigo-600 text-[10px] font-black uppercase rounded-xl hover:bg-indigo-50">+ Add Row</button>
-            <button onclick="submitLot()" id="subBtn" class="px-8 py-3 bg-indigo-600 text-white text-[10px] font-black uppercase rounded-xl shadow-xl hover:bg-indigo-700">Save SRF</button>
+            <button onclick="addRow()" class="btn-action border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50">
+                <i data-lucide="plus" class="w-4 h-4"></i> Add Row
+            </button>
+            <button onclick="submitLot()" id="subBtn" class="btn-action bg-indigo-600 text-white shadow-xl hover:bg-indigo-700 px-10">
+                <i data-lucide="save" class="w-4 h-4"></i> Save Record
+            </button>
         </div>
     </header>
 
-    <!-- Site / End Customer Context Section -->
-    <section class="bg-slate-900 p-6 text-white">
+    <!-- Sub-Customer Selection Section -->
+    <section class="bg-slate-900 p-6 text-white shadow-inner">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row gap-6 items-end">
             <div class="flex-1 space-y-2">
-                <label class="text-[10px] font-black uppercase tracking-widest opacity-50">Calibration Site</label>
-                <select id="siteSelect" onchange="handleSiteChange()" class="w-full p-3 bg-slate-800 border border-slate-700 rounded-xl text-sm font-bold outline-none">
+                <label class="text-[10px] font-bold uppercase tracking-widest opacity-50">Calibration Target</label>
+                <select id="siteSelect" onchange="handleSiteChange()" class="w-full p-3 bg-slate-800 border border-slate-700 rounded-xl text-sm font-bold outline-none focus:border-indigo-500">
                     <option value="self">Self (My Company)</option>
                     <option value="new">+ Add New End-Customer / Site</option>
                 </select>
             </div>
             <div id="newSiteFields" class="hidden flex-[2] flex flex-col md:flex-row gap-3 w-full">
-                <input type="text" id="siteName" class="flex-1 p-3 bg-white text-slate-900 rounded-xl text-sm outline-none" placeholder="End Customer Name">
-                <input type="text" id="siteAddress" class="flex-[2] p-3 bg-white text-slate-900 rounded-xl text-sm outline-none" placeholder="Site Address">
-                <div class="flex items-center gap-2">
-                    <input type="checkbox" id="saveSite" class="w-4 h-4 accent-indigo-500">
-                    <label for="saveSite" class="text-[10px] font-black uppercase cursor-pointer">Save</label>
+                <div class="flex-1 space-y-2">
+                    <label class="text-[10px] font-bold uppercase tracking-widest opacity-50">End Customer Name</label>
+                    <input type="text" id="siteName" class="w-full p-3 bg-white text-slate-900 rounded-xl text-sm outline-none" placeholder="Target Company Name">
+                </div>
+                <div class="flex-[2] space-y-2">
+                    <label class="text-[10px] font-bold uppercase tracking-widest opacity-50">Site Address</label>
+                    <input type="text" id="siteAddress" class="w-full p-3 bg-white text-slate-900 rounded-xl text-sm outline-none" placeholder="Full Delivery Address">
+                </div>
+                <div class="flex items-center gap-2 mb-2">
+                    <input type="checkbox" id="saveSite" class="w-4 h-4 accent-indigo-400">
+                    <label for="saveSite" class="text-[10px] font-bold uppercase cursor-pointer">Save Site</label>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Spreadsheet Area -->
+    <!-- Spreadsheet Table -->
     <main class="flex-grow overflow-auto p-4 custom-scrollbar">
-        <div class="bg-white rounded-3xl border shadow-2xl overflow-hidden min-w-[1600px]">
+        <div class="bg-white rounded-3xl border shadow-2xl overflow-hidden min-w-[1750px]">
             <table class="w-full text-left border-collapse">
                 <thead class="bg-slate-900 text-[10px] text-slate-400 font-black uppercase tracking-widest border-b border-slate-800">
                     <tr>
@@ -77,7 +103,7 @@
                         <th class="p-5 w-[100px]">L.C.</th>
                         <th class="p-5 w-[150px]">Cal Date</th>
                         <th class="p-5 w-[180px]">Location</th>
-                        <th class="p-5 w-[100px] text-center">Delete</th>
+                        <th class="p-5 w-[180px] text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="gridBody" class="divide-y divide-slate-50"></tbody>
@@ -97,47 +123,67 @@
         onAuthStateChanged(auth, async (u) => {
             if(!u) { window.location.href = 'index.html'; return; }
             user = u;
-            const pSnap = await getDoc(doc(db, 'artifacts', APP_ID, 'users', u.uid, 'settings', 'profile'));
-            myProfile = pSnap.exists() ? pSnap.data() : {};
+            
+            const profileSnap = await getDoc(doc(db, 'artifacts', APP_ID, 'users', u.uid, 'settings', 'profile'));
+            myProfile = profileSnap.exists() ? profileSnap.data() : {};
+            
             await loadSavedSites();
-            if(docId) await loadRecord(docId); else await setupNew();
+
+            if(docId) await loadExistingData(docId);
+            else await setupNewSRF();
+            
+            document.getElementById('pageLoader').style.display = 'none';
         });
 
         async function loadSavedSites() {
             const snap = await getDocs(collection(db, 'artifacts', APP_ID, 'users', user.uid, 'sub_customers'));
             savedSites = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            const sel = document.getElementById('siteSelect');
-            sel.innerHTML = `<option value="self">Self (${myProfile.companyName})</option><option value="new">+ Add New End-Customer</option>`;
-            savedSites.forEach(s => { sel.innerHTML += `<option value="${s.id}">${s.name}</option>`; });
+            const select = document.getElementById('siteSelect');
+            select.innerHTML = `<option value="self">Self (${myProfile.companyName || 'My Company'})</option>
+                                <option value="new">+ Add New End-Customer / Site</option>`;
+            savedSites.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.id; opt.innerText = s.name;
+                select.appendChild(opt);
+            });
         }
 
         window.handleSiteChange = () => {
-            const v = document.getElementById('siteSelect').value;
-            const f = document.getElementById('newSiteFields');
-            if(v === 'new') { f.classList.remove('hidden'); document.getElementById('siteName').value = ""; document.getElementById('siteAddress').value = ""; }
-            else if(v !== 'self') { f.classList.remove('hidden'); const s = savedSites.find(x => x.id === v); document.getElementById('siteName').value = s.name; document.getElementById('siteAddress').value = s.address; }
-            else f.classList.add('hidden');
+            const val = document.getElementById('siteSelect').value;
+            const fields = document.getElementById('newSiteFields');
+            if(val === 'new') {
+                fields.classList.remove('hidden');
+                document.getElementById('siteName').value = "";
+                document.getElementById('siteAddress').value = "";
+            } else if(val !== 'self') {
+                const site = savedSites.find(s => s.id === val);
+                fields.classList.remove('hidden');
+                document.getElementById('siteName').value = site.name;
+                document.getElementById('siteAddress').value = site.address;
+            } else {
+                fields.classList.add('hidden');
+            }
         }
 
-        async function loadRecord(id) {
-            const s = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots', id));
-            if(s.exists()) {
-                const d = s.data();
-                const p = d.srfId.split('/');
+        async function loadExistingData(id) {
+            const snap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots', id));
+            if(snap.exists()) {
+                const data = snap.data();
+                const p = data.srfId.split('/');
                 document.getElementById('srfPrefix').value = p[0] + '/' + p[1];
                 document.getElementById('srfLotNo').value = p[2];
-                if(d.endCustomerName && d.endCustomerName !== d.companyName) {
+                if(data.endCustomerName && data.endCustomerName !== data.companyName) {
                     document.getElementById('siteSelect').value = 'new';
                     document.getElementById('newSiteFields').classList.remove('hidden');
-                    document.getElementById('siteName').value = d.endCustomerName;
-                    document.getElementById('siteAddress').value = d.endCustomerAddress;
+                    document.getElementById('siteName').value = data.endCustomerName;
+                    document.getElementById('siteAddress').value = data.endCustomerAddress;
                 }
-                gridData = d.items || [];
+                gridData = data.items || [];
                 render();
             }
         }
 
-        async function setupNew() {
+        async function setupNewSRF() {
             const now = new Date(), yy = now.getFullYear().toString().slice(-2), mm = (now.getMonth() + 1).toString().padStart(2, '0');
             document.getElementById('srfPrefix').value = `R1/${yy}${mm}`;
             const snap = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots'));
@@ -146,41 +192,101 @@
             render();
         }
 
+        // --- Grid Control Actions ---
+        window.addRow = () => { 
+            gridData.push({ name: '', make: '', model: '', srNo: '', idNo: '', range: '', lc: '', calDate: '', location: '' }); 
+            render(); 
+        };
+
+        window.duplicateRow = (i) => {
+            const copy = { ...gridData[i] };
+            gridData.splice(i + 1, 0, copy);
+            render();
+        };
+
+        window.moveRow = (i, dir) => {
+            const target = i + dir;
+            if(target < 0 || target >= gridData.length) return;
+            const temp = gridData[i];
+            gridData[i] = gridData[target];
+            gridData[target] = temp;
+            render();
+        };
+
+        window.del = (i) => { 
+            if(confirm("Remove this instrument from list?")) {
+                gridData.splice(i,1); 
+                render(); 
+            }
+        };
+
+        window.upd = (i, k, v) => { gridData[i][k] = v; };
+
+        function render() {
+            const body = document.getElementById('gridBody');
+            body.innerHTML = gridData.map((r, i) => `
+                <tr class="hover:bg-slate-50 transition-all border-b">
+                    <td class="p-4 sticky-col text-center font-bold text-slate-300 text-[11px]">${i + 1}</td>
+                    <td class="p-2"><input type="text" class="grid-input font-bold" value="${r.name||''}" oninput="upd(${i}, 'name', this.value)" placeholder="e.g. Micrometer"></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${r.make||''}" oninput="upd(${i}, 'make', this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${r.model||''}" oninput="upd(${i}, 'model', this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${r.srNo||''}" oninput="upd(${i}, 'srNo', this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input text-indigo-600 font-bold" value="${r.idNo||''}" oninput="upd(${i}, 'idNo', this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${r.range||''}" oninput="upd(${i}, 'range', this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${r.lc||''}" oninput="upd(${i}, 'lc', this.value)"></td>
+                    <td class="p-2"><input type="date" class="grid-input" value="${r.calDate||''}" oninput="upd(${i}, 'calDate', this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${r.location||''}" oninput="upd(${i}, 'location', this.value)"></td>
+                    <td class="p-2 flex justify-center gap-1">
+                        <button onclick="moveRow(${i}, -1)" class="control-btn" title="Move Up"><i data-lucide="arrow-up" class="w-4 h-4"></i></button>
+                        <button onclick="moveRow(${i}, 1)" class="control-btn" title="Move Down"><i data-lucide="arrow-down" class="w-4 h-4"></i></button>
+                        <button onclick="duplicateRow(${i})" class="control-btn" title="Duplicate Row"><i data-lucide="copy" class="w-4 h-4"></i></button>
+                        <button onclick="del(${i})" class="control-btn hover:text-red-500" title="Delete"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
         window.submitLot = async () => {
             const valid = gridData.filter(r => r.name && r.idNo);
-            if(!valid.length) return alert("Add instruments first!");
-            const btn = document.getElementById('subBtn'); btn.disabled = true;
+            if(!valid.length) return alert("Please fill at least Instrument Name and ID No!");
             
-            let eName = myProfile.companyName, eAddr = myProfile.address;
-            const siteV = document.getElementById('siteSelect').value;
-            if(siteV !== 'self') {
-                eName = document.getElementById('siteName').value; eAddr = document.getElementById('siteAddress').value;
-                if(!eName) return alert("End Customer name required!");
+            const btn = document.getElementById('subBtn');
+            btn.disabled = true; btn.innerText = "SUBMITTING...";
+
+            const siteType = document.getElementById('siteSelect').value;
+            let endName = myProfile.companyName;
+            let endAddr = myProfile.address;
+
+            if(siteType !== 'self') {
+                endName = document.getElementById('siteName').value;
+                endAddr = document.getElementById('siteAddress').value;
+                if(!endName) { btn.disabled = false; btn.innerText = "Save Record"; return alert("End Customer Name is required!"); }
+                
                 if(document.getElementById('saveSite').checked) {
-                    const exists = savedSites.find(s => s.name.toLowerCase() === eName.toLowerCase());
-                    if(!exists) await addDoc(collection(db, 'artifacts', APP_ID, 'users', user.uid, 'sub_customers'), { name: eName, address: eAddr });
+                    const exists = savedSites.find(s => s.name.toLowerCase() === endName.toLowerCase());
+                    if(!exists) await addDoc(collection(db, 'artifacts', APP_ID, 'users', user.uid, 'sub_customers'), { name: endName, address: endAddr });
                 }
             }
-
-            const prefix = document.getElementById('srfPrefix').value;
-            const lotNo = document.getElementById('srfLotNo').value;
-            const srfId = `${prefix}/${lotNo}`;
-            const items = valid.map((r, i) => ({ ...r, jobNo: `${srfId}/${i+1}` }));
+            
+            const fullSrf = `${document.getElementById('srfPrefix').value}/${document.getElementById('srfLotNo').value}`;
+            const items = valid.map((r, i) => ({ ...r, jobNo: `${fullSrf}/${i+1}` }));
             
             const payload = { 
-                srfId, companyName: myProfile.companyName, address: myProfile.address, gstNo: myProfile.gstNo,
-                endCustomerName: eName, endCustomerAddress: eAddr, userEmail: user.email, items, total: items.length, updatedAt: serverTimestamp() 
+                srfId: fullSrf, companyName: myProfile.companyName, address: myProfile.address, gstNo: myProfile.gstNo,
+                endCustomerName: endName, endCustomerAddress: endAddr, userEmail: user.email, items, total: items.length, updatedAt: serverTimestamp() 
             };
-
+            
             try {
                 if(docId) await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots', docId), payload, { merge: true });
                 else { payload.createdAt = serverTimestamp(); await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots'), payload); }
-                alert("Data Saved! ✅"); window.location.href = 'dashboard.html';
-            } catch(e) { alert("Fail!"); btn.disabled = false; }
+                alert("SRF Saved Successfully! ✅"); window.location.href = 'dashboard.html';
+            } catch(e) { alert("Save Failed."); btn.disabled = false; btn.innerText = "Save Record"; }
         };
 
+        // --- Excel Handling ---
         window.importExcel = (e) => {
-            const f = e.target.files[0];
+            const file = e.target.files[0];
             const reader = new FileReader();
             reader.onload = (evt) => {
                 const wb = XLSX.read(evt.target.result, { type: 'binary' });
@@ -194,42 +300,19 @@
                     render();
                 }
             };
-            reader.readAsBinaryString(f);
+            reader.readAsBinaryString(file);
         };
 
         window.downloadTemplate = () => {
-            const h = [["Instrument Name", "Make", "Model", "Serial No", "ID No", "Range", "LC", "Cal Date", "Location"]];
+            const headers = [["Instrument Name", "Make", "Model", "Serial No", "ID No", "Range", "LC", "Cal Date", "Location"]];
             const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.aoa_to_sheet(h);
-            XLSX.utils.book_append_sheet(wb, ws, "SRF");
-            XLSX.writeFile(wb, "SRF_Template.xlsx");
+            const ws = XLSX.utils.aoa_to_sheet(headers);
+            XLSX.utils.book_append_sheet(wb, ws, "Template");
+            XLSX.writeFile(wb, "R1_SRF_Template.xlsx");
         };
 
-        window.addRow = () => { gridData.push({ name: '', make: '', model: '', srNo: '', idNo: '', range: '', lc: '', calDate: '', location: '' }); render(); };
-        window.del = (i) => { gridData.splice(i,1); render(); };
-        window.upd = (i, k, v) => { gridData[i][k] = v; };
-
-        function render() {
-            const body = document.getElementById('gridBody');
-            body.innerHTML = gridData.map((r, i) => `
-                <tr class="hover:bg-slate-50 border-b">
-                    <td class="p-4 sticky-col text-center font-bold text-slate-300 text-[11px]">${i + 1}</td>
-                    <td class="p-2"><input type="text" class="grid-input font-bold" value="${r.name||''}" oninput="upd(${i}, 'name', this.value)"></td>
-                    <td class="p-2"><input type="text" class="grid-input" value="${r.make||''}" oninput="upd(${i}, 'make', this.value)"></td>
-                    <td class="p-2"><input type="text" class="grid-input" value="${r.model||''}" oninput="upd(${i}, 'model', this.value)"></td>
-                    <td class="p-2"><input type="text" class="grid-input" value="${r.srNo||''}" oninput="upd(${i}, 'srNo', this.value)"></td>
-                    <td class="p-2"><input type="text" class="grid-input text-indigo-600 font-bold" value="${r.idNo||''}" oninput="upd(${i}, 'idNo', this.value)"></td>
-                    <td class="p-2"><input type="text" class="grid-input" value="${r.range||''}" oninput="upd(${i}, 'range', this.value)"></td>
-                    <td class="p-2"><input type="text" class="grid-input" value="${r.lc||''}" oninput="upd(${i}, 'lc', this.value)"></td>
-                    <td class="p-2"><input type="date" class="grid-input" value="${r.calDate||''}" oninput="upd(${i}, 'calDate', this.value)"></td>
-                    <td class="p-2"><input type="text" class="grid-input" value="${r.location||''}" oninput="upd(${i}, 'location', this.value)"></td>
-                    <td class="p-2 text-center"><button onclick="del(${i})" class="text-red-300 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td>
-                </tr>`).join('');
-            lucide.createIcons();
-        }
         window.upd = upd;
     </script>
 </body>
 </html>
-
 
