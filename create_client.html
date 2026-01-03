@@ -23,10 +23,10 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- Screen Loader -->
-    <div id="pageLoader" class="fixed inset-0 bg-white z-[500] flex flex-col items-center justify-center transition-opacity duration-500">
+    <!-- Global Loader -->
+    <div id="pageLoader" class="fixed inset-0 bg-white z-[500] flex flex-col items-center justify-center">
         <div class="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-        <p class="mt-4 text-slate-500 font-bold text-[10px] uppercase tracking-[0.2em]">Authenticating & Loading Data...</p>
+        <p class="mt-4 text-slate-500 font-bold text-[10px] uppercase tracking-[0.2em]">Syncing Business Data...</p>
     </div>
 
     <!-- Header -->
@@ -38,29 +38,29 @@
                 </button>
                 <div>
                     <h1 id="pageTitle" class="text-xl font-black uppercase tracking-tighter text-indigo-600">Company Profile</h1>
-                    <p id="pageDesc" class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Manage Business Identity</p>
+                    <p id="pageDesc" class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Business Identity Management</p>
                 </div>
             </div>
             <div id="statusBadge" class="hidden text-[10px] font-black text-emerald-500 uppercase bg-emerald-50 px-4 py-2 rounded-full border border-emerald-100 flex items-center gap-2">
-                <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div> Active Profile
+                <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div> Profile Synced
             </div>
         </div>
     </header>
 
     <main class="flex-grow max-w-6xl mx-auto w-full p-6 py-12">
         
-        <!-- Company Name Field -->
+        <!-- Company Name -->
         <div class="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm mb-8">
             <label class="label-text">Official Company Name *</label>
-            <input type="text" id="compName" class="form-input text-lg py-4 border-2" placeholder="e.g. Acme International">
+            <input type="text" id="compName" class="form-input text-lg py-4 border-2" placeholder="e.g. Acme Corporation">
         </div>
 
-        <!-- Sites List -->
+        <!-- Site List -->
         <div class="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden">
             <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                 <div>
                     <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">Registered Sites</h3>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">List of all physical plant/office locations</p>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">List of all physical locations</p>
                 </div>
                 <button onclick="addSiteRow()" class="flex items-center gap-2 text-[10px] font-black uppercase text-white bg-indigo-600 px-5 py-2.5 rounded-xl hover:bg-indigo-700 shadow-lg transition-all">
                     <i data-lucide="plus" class="w-4 h-4"></i> Add New Site
@@ -69,22 +69,19 @@
 
             <div class="grid grid-cols-12 gap-4 px-6 py-3 bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 hidden md:grid">
                 <div class="col-span-1">No.</div>
-                <div class="col-span-5">Location Address</div>
+                <div class="col-span-5">Site Address</div>
                 <div class="col-span-4">Contact Person</div>
                 <div class="col-span-2 text-right">Actions</div>
             </div>
 
-            <div id="sitesContainer" class="divide-y divide-slate-50">
-                <!-- Data injected here -->
-            </div>
+            <div id="sitesContainer" class="divide-y divide-slate-50"></div>
 
             <div id="emptyHint" class="hidden py-16 text-center">
-                <i data-lucide="info" class="text-slate-200 w-12 h-12 mx-auto mb-4"></i>
-                <p class="text-xs font-bold text-slate-300 uppercase tracking-widest">No site information found.</p>
+                <i data-lucide="map-pin" class="text-slate-200 w-12 h-12 mx-auto mb-4"></i>
+                <p class="text-xs font-bold text-slate-300 uppercase tracking-widest">No sites found.</p>
             </div>
         </div>
 
-        <!-- Save Button -->
         <div class="mt-10 mb-24">
             <button onclick="saveProfile()" id="saveBtn" class="w-full bg-indigo-600 text-white font-black py-5 rounded-[1.5rem] uppercase text-xs tracking-widest shadow-2xl hover:bg-indigo-700 transition-all flex items-center justify-center gap-3">
                 <i data-lucide="save" class="w-5 h-5"></i> <span id="btnText">Save Profile Information</span>
@@ -97,71 +94,74 @@
         import { onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        let user = null, isAdmin = false, cid = "";
         const params = new URLSearchParams(window.location.search);
-        cid = params.get('cid'); // Passed from Admin directory
+        const cid = params.get('cid'); // Priority #1: CID from URL
+        let userUid = "";
+        let isAdmin = false;
 
-        // Initialize App and Listen for Auth
-        onAuthStateChanged(auth, async u => {
-            if(!u) {
-                console.log("No user found, signing in anonymously...");
+        // AUTH LISTENER
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
                 await signInAnonymously(auth);
                 return;
             }
-            user = u;
-            isAdmin = u.email && u.email.startsWith('admin');
-            console.log("User Authenticated:", user.uid, "Admin:", isAdmin);
+            userUid = user.uid;
+            isAdmin = user.email && user.email.startsWith('admin');
             
-            await startLoading();
+            console.log("Auth State Checked: ", { userUid, isAdmin, cid });
+            await initPage();
         });
 
-        async function startLoading() {
-            const loader = document.getElementById('pageLoader');
+        async function initPage() {
+            // Priority: Use CID if provided (Admin Mode), else use Logged-in User UID
+            const targetId = cid || userUid;
+            
+            if (cid) {
+                document.getElementById('pageTitle').innerText = "Edit Client Profile";
+                document.getElementById('pageDesc').innerText = "Admin Directory Control";
+            }
+
             try {
-                await loadProfileData();
+                await loadData(targetId);
             } catch (err) {
-                console.error("Load Error:", err);
+                console.error("Data Load Error:", err);
             } finally {
-                loader.style.opacity = '0';
-                setTimeout(() => loader.style.display = 'none', 500);
+                document.getElementById('pageLoader').style.display = 'none';
             }
         }
 
-        async function loadProfileData() {
-            const targetId = (isAdmin && cid) ? cid : user.uid;
-            console.log("Fetching data for ID:", targetId);
-
-            // Paths to check (Checking all historical locations)
+        async function loadData(targetId) {
+            // Check all possible paths where data might exist
             const paths = [
                 doc(db, 'artifacts', APP_ID, 'public', 'data', 'customers', targetId),
                 doc(db, 'artifacts', APP_ID, 'users', targetId, 'settings', 'profile'),
                 doc(db, 'artifacts', APP_ID, 'users', targetId, 'profile', 'business_data')
             ];
 
-            let dataFound = null;
+            let finalData = null;
 
-            for(const pathRef of paths) {
-                const snap = await getDoc(pathRef);
-                if(snap.exists()) {
-                    dataFound = snap.data();
-                    console.log("Data found at path:", pathRef.path);
-                    break; 
+            for (const p of paths) {
+                const snap = await getDoc(p);
+                if (snap.exists()) {
+                    finalData = snap.data();
+                    console.log("Success! Data loaded from: ", p.path);
+                    break;
                 }
             }
 
-            if(dataFound) {
-                document.getElementById('compName').value = dataFound.companyName || "";
+            if (finalData) {
+                document.getElementById('compName').value = finalData.companyName || "";
                 document.getElementById('statusBadge').classList.remove('hidden');
                 document.getElementById('btnText').innerText = "Update Registered Profile";
                 
-                if(dataFound.allSites && dataFound.allSites.length > 0) {
-                    dataFound.allSites.forEach(s => addSiteRow(s));
+                if (finalData.allSites && finalData.allSites.length > 0) {
+                    finalData.allSites.forEach(s => addSiteRow(s));
                 } else {
                     addSiteRow();
                 }
             } else {
-                console.log("No existing data found in any path.");
-                addSiteRow(); // Default blank row
+                console.log("No existing data found for target: ", targetId);
+                addSiteRow();
             }
         }
 
@@ -177,10 +177,10 @@
                 <div class="grid grid-cols-12 gap-4 px-6 py-4 items-center cursor-pointer" onclick="toggleExpand('${rowId}')">
                     <div class="col-span-1 text-[10px] font-black text-slate-300 sr-num">01</div>
                     <div class="col-span-11 md:col-span-5">
-                        <p class="text-xs font-bold text-slate-700 truncate summary-addr">${data?.siteAddress || 'Click to enter address...'}</p>
+                        <p class="text-xs font-bold text-slate-700 truncate summary-addr">${data?.siteAddress || 'New Site Location...'}</p>
                     </div>
                     <div class="col-span-8 md:col-span-4 hidden md:block">
-                        <p class="text-[10px] font-black text-slate-400 uppercase summary-name">${data?.contactName || 'TBD'}</p>
+                        <p class="text-[10px] font-black text-slate-400 uppercase summary-name">${data?.contactName || 'Pending Contact'}</p>
                     </div>
                     <div class="col-span-4 md:col-span-2 text-right flex justify-end gap-2">
                         <button class="p-2 text-slate-300 hover:text-indigo-600 transition-colors">
@@ -195,12 +195,12 @@
                 <div class="site-details shadow-inner">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="md:col-span-1">
-                            <span class="label-text">Site Address *</span>
+                            <span class="label-text">A. Physical Site Address *</span>
                             <textarea class="form-input h-20 resize-none site-addr" oninput="updateSummary('${rowId}')">${data?.siteAddress || ""}</textarea>
                         </div>
                         <div class="md:col-span-1">
                             <div class="flex justify-between items-center mb-1">
-                                <span class="label-text mb-0">Billing Address</span>
+                                <span class="label-text mb-0">B. Billing Address</span>
                                 <label class="flex items-center gap-1 cursor-pointer">
                                     <input type="checkbox" onchange="toggleSync('${rowId}')" class="sync-check w-3 h-3 accent-indigo-600">
                                     <span class="text-[8px] font-black uppercase text-slate-400">Same as Site</span>
@@ -209,26 +209,26 @@
                             <textarea class="form-input h-20 resize-none bill-addr">${data?.billingAddress || ""}</textarea>
                         </div>
                         <div>
-                            <span class="label-text">GST Number</span>
+                            <span class="label-text">C. GST Registration</span>
                             <input type="text" class="form-input uppercase gst-no" value="${data?.gstNo || ""}">
                         </div>
                         <div class="md:col-span-2 border-t border-slate-100 pt-4 mt-2">
                             <p class="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Site Contact Details</p>
                         </div>
                         <div>
-                            <span class="label-text">Full Name *</span>
+                            <span class="label-text">D. Contact Full Name *</span>
                             <input type="text" class="form-input person-name" oninput="updateSummary('${rowId}')" value="${data?.contactName || ""}">
                         </div>
                         <div>
-                            <span class="label-text">Designation</span>
+                            <span class="label-text">E. Designation</span>
                             <input type="text" class="form-input person-desig" value="${data?.contactDesig || ""}">
                         </div>
                         <div>
-                            <span class="label-text">Phone Number *</span>
+                            <span class="label-text">F. Mobile Number *</span>
                             <input type="text" class="form-input person-phone" value="${data?.contactPhone || ""}">
                         </div>
                         <div>
-                            <span class="label-text">Email Address</span>
+                            <span class="label-text">G. Email ID</span>
                             <input type="email" class="form-input person-email" value="${data?.contactEmail || ""}">
                         </div>
                     </div>
@@ -257,7 +257,7 @@
             const addr = row.querySelector('.site-addr').value;
             const name = row.querySelector('.person-name').value;
             row.querySelector('.summary-addr').innerText = addr || 'New Site Location...';
-            row.querySelector('.summary-name').innerText = name || 'TBD';
+            row.querySelector('.summary-name').innerText = name || 'Pending Contact';
         };
 
         window.updateSrNumbers = () => {
@@ -271,7 +271,7 @@
                 document.getElementById(id).remove();
                 updateSrNumbers();
             } else {
-                alert("At least one location is required.");
+                alert("At least one location is mandatory.");
             }
         };
 
@@ -287,7 +287,7 @@
             if(!comp) return alert("Company Name is required.");
 
             const btn = document.getElementById('saveBtn');
-            btn.disabled = true; btn.innerText = "Saving to Cloud...";
+            btn.disabled = true; btn.innerText = "Processing Cloud Sync...";
 
             const sites = Array.from(rows).map(r => ({
                 siteAddress: r.querySelector('.site-addr').value.trim(),
@@ -299,12 +299,6 @@
                 contactEmail: r.querySelector('.person-email').value.trim()
             }));
 
-            if(!sites[0].siteAddress || !sites[0].contactName) {
-                alert("Site 01 details are mandatory.");
-                btn.disabled = false; btn.innerText = "Save Profile Information";
-                return;
-            }
-
             const payload = {
                 companyName: comp,
                 allSites: sites,
@@ -312,25 +306,21 @@
                 address: sites[0].siteAddress,
                 contactPerson: sites[0].contactName,
                 phone: sites[0].contactPhone,
-                officialEmail: sites[0].contactEmail,
                 role: 'customer'
             };
 
             try {
-                const targetId = (isAdmin && cid) ? cid : user.uid;
+                // Determine target: Admin editing cid OR customer editing self
+                const finalTargetId = cid || userUid;
                 
-                // Primary Save Path (Public Directory)
-                await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'customers', targetId), payload, { merge: true });
+                // Save to both public and private paths to be safe
+                await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'customers', finalTargetId), payload, { merge: true });
+                await setDoc(doc(db, 'artifacts', APP_ID, 'users', finalTargetId, 'settings', 'profile'), payload, { merge: true });
                 
-                // Backup Save Paths for backward compatibility
-                await setDoc(doc(db, 'artifacts', APP_ID, 'users', targetId, 'settings', 'profile'), payload, { merge: true });
-                await setDoc(doc(db, 'artifacts', APP_ID, 'users', targetId, 'profile', 'business_data'), payload, { merge: true });
-                
-                alert("Business Profile Synced Successfully! ✅");
+                alert("Profile Information Synced! ✅");
                 window.location.href = isAdmin ? 'admin.html' : 'dashboard.html';
             } catch (e) {
-                console.error("Save Error:", e);
-                alert("Failed to save data: " + e.message);
+                alert("Sync Failed: " + e.message);
                 btn.disabled = false; btn.innerText = "Save Profile Information";
             }
         };
@@ -340,5 +330,4 @@
     </script>
 </body>
 </html>
-
 
