@@ -34,7 +34,7 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- Loading Screen -->
+    <!-- Loading Overlay -->
     <div id="pageLoader" class="fixed inset-0 bg-white z-[500] flex flex-col items-center justify-center">
         <div class="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
         <p class="mt-4 text-slate-500 font-bold text-xs uppercase tracking-widest italic">Syncing Master Editor...</p>
@@ -81,7 +81,7 @@
                 </div>
 
                 <div class="flex items-center gap-3 w-full lg:w-auto">
-                    <button onclick="addRow()" class="btn-action btn-outline flex-1 lg:flex-none"><i data-lucide="plus" class="w-4 h-4"></i> Row</button>
+                    <button onclick="addRow()" class="btn-action btn-outline flex-1 lg:flex-none"><i data-lucide="plus" class="w-4 h-4"></i> Add Row</button>
                     <button onclick="submitSRF()" id="subBtn" class="btn-action btn-primary px-10 flex-1 lg:flex-none"><i data-lucide="save" class="w-4 h-4"></i> Save Record</button>
                 </div>
             </div>
@@ -89,20 +89,24 @@
             <div class="bg-slate-50 border-t border-slate-100 px-4 py-3 flex flex-col lg:flex-row justify-between items-center gap-4">
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3 w-full lg:w-auto">
                     <div>
-                        <label class="text-[8px] font-black text-slate-400 mb-1 block ml-1 uppercase">Job Category</label>
+                        <label class="text-[8px] font-black text-slate-400 mb-1 block ml-1 uppercase tracking-widest">Job Category</label>
                         <select id="jobType" onchange="updateJobNo()" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-bold outline-none">
                             <option value="NABL">NABL</option>
                             <option value="NON NABL">NON NABL</option>
                         </select>
                     </div>
-                    <div><label class="text-[8px] font-black text-slate-400 mb-1 block ml-1 uppercase">Job Date</label><input type="date" id="jobDate" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-bold"></div>
-                    <div><label class="text-[8px] font-black text-slate-400 mb-1 block ml-1 uppercase">Receipt Date</label><input type="date" id="receiptDate" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-bold"></div>
-                    <div><label class="text-[8px] font-black text-slate-400 mb-1 block ml-1 uppercase">Job Number</label><input type="text" id="jobNoDisplay" readonly class="w-full p-2 bg-indigo-50 border border-indigo-100 rounded-lg text-[11px] font-black text-indigo-600 uppercase"></div>
+                    <div><label class="text-[8px] font-black text-slate-400 mb-1 block ml-1 uppercase tracking-widest">Job Date</label><input type="date" id="jobDate" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-bold"></div>
+                    <div><label class="text-[8px] font-black text-slate-400 mb-1 block ml-1 uppercase tracking-widest">Receipt Date</label><input type="date" id="receiptDate" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-bold"></div>
+                    <div><label class="text-[8px] font-black text-slate-400 mb-1 block ml-1 uppercase tracking-widest">Job Number</label><input type="text" id="jobNoDisplay" readonly class="w-full p-2 bg-indigo-50 border border-indigo-100 rounded-lg text-[11px] font-black text-indigo-600 uppercase"></div>
                 </div>
 
                 <div class="flex items-center gap-2 w-full lg:w-auto border-t lg:border-t-0 pt-3 lg:pt-0">
                     <input type="file" id="excelInput" class="hidden" accept=".xlsx, .xls" onchange="importExcel(event)">
-                    <button onclick="exportSRFToExcel()" class="btn-action btn-admin admin-col hidden"><i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Export</button>
+                    
+                    <button onclick="exportSRFToExcel()" class="btn-action btn-admin admin-col hidden">
+                        <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Export SRF
+                    </button>
+                    
                     <button onclick="document.getElementById('excelInput').click()" class="btn-action btn-secondary"><i data-lucide="file-up" class="w-4 h-4"></i> Import</button>
                     <button onclick="downloadTemplate()" class="btn-action btn-secondary"><i data-lucide="download" class="w-4 h-4"></i> Template</button>
                 </div>
@@ -110,22 +114,24 @@
         </div>
     </header>
 
+    <!-- Site Information Banner -->
     <section class="bg-slate-900 px-6 py-4 text-white">
         <div class="max-w-[1800px] mx-auto flex flex-col md:flex-row items-center gap-6">
             <div class="w-full md:w-72">
-                <label class="text-[9px] font-black uppercase text-slate-500 mb-1.5 block">Target Site</label>
+                <label class="text-[9px] font-black uppercase text-slate-500 mb-1.5 block tracking-widest">Delivery / Target Site</label>
                 <select id="siteSelect" onchange="handleSiteSelect()" class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs font-bold outline-none focus:border-indigo-500 transition-all">
                     <option value="">-- Choose From Profile --</option>
                 </select>
             </div>
             <div class="flex-grow p-3 bg-white/5 border border-white/10 rounded-xl flex items-center gap-4">
                 <div class="p-2 bg-indigo-500/20 rounded-lg"><i data-lucide="map-pin" class="w-4 h-4 text-indigo-400"></i></div>
-                <div><h4 id="displayLabel" class="text-[11px] font-black uppercase">No Site Selected</h4><p id="displayAddress" class="text-[10px] text-slate-400 italic">Select location to enable saving...</p></div>
+                <div><h4 id="displayLabel" class="text-[11px] font-black uppercase tracking-wider">No Site Selected</h4><p id="displayAddress" class="text-[10px] text-slate-400 italic">Please select a location to enable saving and export...</p></div>
                 <span id="savedBadge" class="hidden ml-auto px-2 py-1 bg-emerald-500/20 text-emerald-400 text-[8px] font-black uppercase rounded border border-emerald-500/30">Locked</span>
             </div>
         </div>
     </section>
 
+    <!-- Spreadsheet Grid -->
     <main class="flex-grow overflow-auto p-4 custom-scrollbar">
         <div class="bg-white rounded-3xl border shadow-xl overflow-hidden min-w-[2600px]">
             <table class="w-full text-left border-collapse">
@@ -206,8 +212,9 @@
         }
 
         window.handleSiteSelect = (isEx = false) => {
-            const opt = document.getElementById('siteSelect').options[document.getElementById('siteSelect').selectedIndex];
-            document.getElementById('displayAddress').innerText = opt.value !== "" ? opt.dataset.addr : "Select location...";
+            const select = document.getElementById('siteSelect');
+            const opt = select.options[select.selectedIndex];
+            document.getElementById('displayAddress').innerText = opt.value !== "" ? opt.dataset.addr : "Please select a location...";
             document.getElementById('displayLabel').innerText = opt.value !== "" ? opt.text : "No Site Selected";
             if(isEx) document.getElementById('savedBadge').classList.remove('hidden');
         }
@@ -230,31 +237,67 @@
 
         function createBlankRow() { return { name: '', format: '', make: '', model: '', srNo: '', idNo: '', ranges: [], sizes: '', lcs: [], accuracy: '', location: '', calDate: '', engineer: '' }; }
 
-        // --- SMART EXCEL EXPORT ---
+        // --- ENHANCED ADMIN EXPORT ---
         window.exportSRFToExcel = () => {
-            if(!gridData.length) return alert("No data!");
-            const jobNo = document.getElementById('jobNoDisplay').value;
-            
-            const excelRows = gridData.map((r, i) => ({
-                "Sr.": i + 1,
-                "Instrument Name": r.name,
-                "Format": r.format,
-                "Make": r.make,
-                "Model": r.model,
-                "Serial No": r.srNo,
-                "ID No": r.idNo,
-                "Range": r.ranges?.map(x => `${x.min} to ${x.max} ${x.unit}`).join(' ; ') || '',
-                "Size": r.sizes,
-                "L.C.": r.lcs?.map(x => `${x.val} ${x.unit}`).join(' ; ') || '',
-                "Accuracy": r.accuracy,
-                "Location": r.location,
-                "Cal Date": r.calDate,
-                "Engineer": r.engineer
-            }));
+            if(!gridData.length) return alert("Add some data before exporting!");
+            const siteSelect = document.getElementById('siteSelect');
+            if(!siteSelect.value && !existingSiteAddr) return alert("Please select a target site first to include address!");
 
-            const ws = XLSX.utils.json_to_sheet(excelRows);
+            const jobNo = document.getElementById('jobNoDisplay').value;
+            const jobType = document.getElementById('jobType').value;
+            const jobDate = document.getElementById('jobDate').value;
+            const customerName = targetProfile.companyName || 'N/A';
+            const siteAddress = document.getElementById('displayAddress').innerText;
+
+            // 1. Prepare Metadata Header Rows
+            const metadata = [
+                ["SERVICE REQUEST FORM - R1 TECH LABS"],
+                [],
+                ["JOB NUMBER:", jobNo, "", "JOB TYPE:", jobType],
+                ["JOB DATE:", jobDate, "", "RECEIPT DATE:", document.getElementById('receiptDate').value],
+                ["CUSTOMER NAME:", customerName],
+                ["DELIVERY ADDRESS:", siteAddress],
+                [], // Blank space before table
+                ["Sr.", "Instrument Name", "Format", "Make", "Model", "Serial No", "ID No", "Range", "Size", "L.C.", "Accuracy", "Location", "Cal Date", "Engineer"]
+            ];
+
+            // 2. Prepare Instrument Data Rows
+            const dataRows = gridData.map((r, i) => {
+                const rangeStr = r.ranges?.map(x => `${x.min} to ${x.max} ${x.unit}`).join(' ; ') || '';
+                const lcStr = r.lcs?.map(x => `${x.val} ${x.unit}`).join(' ; ') || '';
+                
+                return [
+                    i + 1,
+                    r.name || '',
+                    r.format || '',
+                    r.make || '',
+                    r.model || '',
+                    r.srNo || '',
+                    r.idNo || '',
+                    rangeStr,
+                    r.sizes || '',
+                    lcStr,
+                    r.accuracy || '',
+                    r.location || '',
+                    r.calDate || '',
+                    r.engineer || ''
+                ];
+            });
+
+            // 3. Combine Metadata + Data
+            const finalSheetData = [...metadata, ...dataRows];
+
+            // 4. Generate Workbook
+            const ws = XLSX.utils.aoa_to_sheet(finalSheetData);
+            
+            // Basic column widths for better look
+            ws['!cols'] = [
+                { wch: 5 }, { wch: 30 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 18 }, { wch: 18 }, 
+                { wch: 30 }, { wch: 10 }, { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }
+            ];
+
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "SRF");
+            XLSX.utils.book_append_sheet(wb, ws, "SRF_Export");
             XLSX.writeFile(wb, `SRF_${jobNo.replace(/\//g,'_')}.xlsx`);
         };
 
@@ -264,7 +307,6 @@
             XLSX.writeFile(wb, "R1_SRF_Template.xlsx");
         };
 
-        // --- SMART EXCEL IMPORT ---
         window.importExcel = (e) => {
             const file = e.target.files[0];
             const reader = new FileReader();
@@ -272,40 +314,32 @@
                 const wb = XLSX.read(evt.target.result, { type: 'binary' });
                 const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
                 gridData = rows.map(r => {
-                    // Smart Parsing Logic for Range
-                    const rangeStr = (r['Range'] || '').toString();
-                    const rangeParts = rangeStr.split(';').map(p => {
-                        const clean = p.trim();
-                        if(!clean) return null;
-                        const match = clean.match(/([\d.]+)\s*(?:to|-)\s*([\d.]+)\s*(.*)/i);
-                        if(match) return { min: match[1], max: match[2], unit: match[3].trim() };
-                        return { min: '', max: clean, unit: '' }; // Fallback
+                    const rStr = (r['Range'] || '').toString();
+                    const rParts = rStr.split(';').map(p => {
+                        const c = p.trim(); if(!c) return null;
+                        const m = c.match(/([\d.]+)\s*(?:to|-)\s*([\d.]+)\s*(.*)/i);
+                        return m ? { min: m[1], max: m[2], unit: m[3].trim() } : { min: '', max: c, unit: '' };
                     }).filter(x => x);
-
-                    // Smart Parsing Logic for L.C.
-                    const lcStr = (r['L.C.'] || r['LC'] || '').toString();
-                    const lcParts = lcStr.split(';').map(p => {
-                        const clean = p.trim();
-                        if(!clean) return null;
-                        const match = clean.match(/([\d.]+)\s*(.*)/i);
-                        if(match) return { val: match[1], unit: match[2].trim() };
-                        return { val: clean, unit: '' };
+                    const lStr = (r['L.C.'] || r['LC'] || '').toString();
+                    const lParts = lStr.split(';').map(p => {
+                        const c = p.trim(); if(!c) return null;
+                        const m = c.match(/([\d.]+)\s*(.*)/i);
+                        return m ? { val: m[1], unit: m[2].trim() } : { val: c, unit: '' };
                     }).filter(x => x);
-
                     return {
                         name: r['Instrument Name'] || '', format: '', make: r['Make'] || '', model: r['Model'] || '',
                         srNo: r['Serial No'] || r['Serial No.'] || '', idNo: r['ID No'] || r['ID No.'] || '',
-                        ranges: rangeParts, sizes: r['Size'] || '', lcs: lcParts, accuracy: r['Accuracy'] || '',
+                        ranges: rParts, sizes: r['Size'] || '', lcs: lParts, accuracy: r['Accuracy'] || '',
                         location: r['Location'] || '', calDate: r['Cal Date'] || '', engineer: ''
                     };
                 });
                 render();
-                alert(`Imported ${gridData.length} instruments successfully!`);
+                alert(`Imported ${gridData.length} items!`);
             };
             reader.readAsBinaryString(file);
         };
 
-        // --- POPUP ENGINE ---
+        // Popup Handlers
         window.openRangePopup = (idx) => { activeRowIdx = idx; const container = document.getElementById('rangeEntries'); container.innerHTML = ''; (gridData[idx].ranges?.length ? gridData[idx].ranges : [{min:'', max:'', unit:''}]).forEach(r => addRangeRow(r)); document.getElementById('rangeModal').classList.add('active'); };
         window.addRangeRow = (d = null) => { const div = document.createElement('div'); div.className = "flex gap-2 items-center mb-2"; div.innerHTML = `<input type="text" placeholder="Min" class="grid-input w-20 r-min" value="${d?.min||''}"> <span class="text-[10px] font-bold text-slate-300">to</span> <input type="text" placeholder="Max" class="grid-input w-20 r-max" value="${d?.max||''}"> <input type="text" placeholder="Unit" class="grid-input w-24 r-unit" value="${d?.unit||''}"> <button onclick="this.parentElement.remove()" class="text-red-300 hover:text-red-500"><i data-lucide="minus-circle" class="w-4 h-4"></i></button>`; document.getElementById('rangeEntries').appendChild(div); lucide.createIcons(); };
         window.saveRangeData = () => { gridData[activeRowIdx].ranges = Array.from(document.querySelectorAll('#rangeEntries > div')).map(div => ({ min: div.querySelector('.r-min').value, max: div.querySelector('.r-max').value, unit: div.querySelector('.r-unit').value })).filter(r => r.max); closeModals(); render(); };
@@ -314,11 +348,10 @@
         window.saveLcData = () => { gridData[activeRowIdx].lcs = Array.from(document.querySelectorAll('#lcEntries > div')).map(div => ({ val: div.querySelector('.l-val').value, unit: div.querySelector('.l-unit').value })).filter(l => l.val); closeModals(); render(); };
         window.closeModals = () => { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); activeRowIdx = null; };
 
-        // --- GRID RENDERING ---
         window.addRow = () => { gridData.push(createBlankRow()); render(); };
         window.duplicateRow = (i) => { gridData.splice(i+1, 0, JSON.parse(JSON.stringify(gridData[i]))); render(); };
         window.moveRow = (i, d) => { const t = i + d; if(t >= 0 && t < gridData.length) { [gridData[i], gridData[t]] = [gridData[t], gridData[i]]; render(); } };
-        window.del = (i) => { if(confirm("Remove?")) { gridData.splice(i,1); render(); } };
+        window.del = (i) => { if(confirm("Delete this instrument row?")) { gridData.splice(i,1); render(); } };
         window.upd = (i, k, v) => { gridData[i][k] = v; };
 
         function render() {
@@ -339,29 +372,31 @@
                     <td class="p-2"><input type="date" class="grid-input" value="${r.calDate||''}" oninput="upd(${i},'calDate',this.value)"></td>
                     <td class="p-2 admin-col ${isAdmin?'':'hidden'}"><input type="text" class="grid-input bg-indigo-50/50" value="${r.engineer||''}" oninput="upd(${i},'engineer',this.value)"></td>
                     <td class="p-5 text-center"><div class="flex justify-center gap-1">
-                        <button onclick="moveRow(${i},-1)" class="control-btn"><i data-lucide="chevron-up" class="w-4 h-4"></i></button>
-                        <button onclick="moveRow(${i},1)" class="control-btn"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>
-                        <button onclick="duplicateRow(${i})" class="control-btn"><i data-lucide="copy" class="w-4 h-4"></i></button>
-                        <button onclick="del(${i})" class="control-btn hover:text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        <button onclick="moveRow(${i},-1)" class="control-btn" title="Move Up"><i data-lucide="chevron-up" class="w-4 h-4"></i></button>
+                        <button onclick="moveRow(${i},1)" class="control-btn" title="Move Down"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>
+                        <button onclick="duplicateRow(${i})" class="control-btn" title="Duplicate"><i data-lucide="copy" class="w-4 h-4"></i></button>
+                        <button onclick="del(${i})" class="control-btn hover:text-red-500" title="Delete"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </div></td>
                 </tr>`).join('');
             lucide.createIcons();
         }
 
         window.submitSRF = async () => {
-            const btn = document.getElementById('subBtn'); const site = document.getElementById('siteSelect').options[document.getElementById('siteSelect').selectedIndex];
-            if(!site.value) return alert("Select site!"); btn.disabled = true; btn.innerText = "Syncing...";
+            const btn = document.getElementById('subBtn'); 
+            const site = document.getElementById('siteSelect').options[document.getElementById('siteSelect').selectedIndex];
+            if(!site.value && !existingSiteAddr) return alert("Select a delivery site location!");
+            btn.disabled = true; btn.innerText = "Syncing...";
             const payload = {
                 srfId: document.getElementById('jobNoDisplay').value, jobType: document.getElementById('jobType').value,
                 jobDate: document.getElementById('jobDate').value, receiptDate: document.getElementById('receiptDate').value,
-                companyName: targetProfile.companyName, endCustomerAddress: site.dataset.addr, locationLabel: site.text,
+                companyName: targetProfile.companyName, endCustomerAddress: site.dataset.addr || existingSiteAddr, locationLabel: site.text,
                 items: gridData, total: gridData.length, updatedAt: serverTimestamp(), userEmail: isAdmin ? 'admin' : user.email
             };
             try {
                 if(docId) await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots', docId), payload, { merge: true });
                 else { payload.createdAt = serverTimestamp(); await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots'), payload); }
-                alert("Saved! ✅"); window.location.href = isAdmin ? 'admin.html' : 'dashboard.html';
-            } catch(e) { alert("Error."); btn.disabled = false; }
+                alert("Master SRF Record Successfully Saved! ✅"); window.location.href = isAdmin ? 'admin.html' : 'dashboard.html';
+            } catch(e) { alert("Error saving record."); btn.disabled = false; }
         };
         lucide.createIcons();
     </script>
