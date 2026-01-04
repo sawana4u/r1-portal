@@ -8,230 +8,217 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
-        body { font-family: 'Outfit', sans-serif; background-color: #f8fafc; }
-        .list-row { transition: all 0.2s; border-bottom: 1px solid #f1f5f9; }
-        .list-row:hover { background-color: #fdfeff; transform: scale(1.002); }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        body { font-family: 'Outfit', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        .stat-card { transition: transform 0.2s, box-shadow 0.2s; }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px -8px rgba(79, 70, 229, 0.15); }
+        .table-row { transition: all 0.2s; }
+        .table-row:hover { background-color: #f1f5f9; }
+        .loader-spin { border: 3px solid #f3f3f3; border-top: 3px solid #4f46e5; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
-    
-    <!-- TOP NAVIGATION HEADER -->
-    <header class="bg-white border-b border-slate-200 p-4 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
-            
-            <!-- Branding Section (Dynamically updated with Company Name) -->
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-100">
-                    <i data-lucide="layout-dashboard" class="text-white w-6 h-6"></i>
+
+    <!-- Header Section -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-100">
+                    <i data-lucide="layout-dashboard" class="w-6 h-6"></i>
                 </div>
                 <div>
-                    <!-- ID 'displayCompName' added to update via JS -->
-                    <h1 id="displayCompName" class="text-lg font-black uppercase tracking-tighter italic">Loading...</h1>
-                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Customer Dashboard Portal</p>
+                    <h1 class="text-xl font-black uppercase tracking-tighter text-slate-800">R1 Portal</h1>
+                    <p id="userCompany" class="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic">Syncing Business...</p>
                 </div>
             </div>
-
-            <!-- Action Buttons -->
-            <div class="flex items-center gap-2">
-                <a href="create_client.html" 
-                   class="flex items-center gap-2 px-4 py-2.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all group">
-                    <i data-lucide="user-circle" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
-                    <span class="text-[10px] font-black uppercase tracking-widest hidden md:block">My Business Profile</span>
-                </a>
-
-                <div class="h-6 w-[1px] bg-slate-200 mx-1"></div>
-
-                <button onclick="logout()" 
-                        class="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all group"
-                        title="Sign Out">
-                    <i data-lucide="log-out" class="w-5 h-5 group-hover:translate-x-0.5 transition-transform"></i>
+            
+            <div class="flex items-center gap-3">
+                <button onclick="window.location.href='create_client.html'" class="hidden md:flex items-center gap-2 px-4 py-2 text-xs font-black uppercase text-slate-500 hover:text-indigo-600 transition-all">
+                    <i data-lucide="building-2" class="w-4 h-4"></i> Profile
+                </button>
+                <button onclick="logout()" class="p-2.5 bg-slate-50 text-slate-400 rounded-xl hover:bg-red-50 hover:text-red-500 transition-all">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
                 </button>
             </div>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto w-full p-6 space-y-8">
+    <main class="flex-grow max-w-7xl mx-auto w-full px-4 py-8">
         
-        <!-- Welcome & Stats -->
-        <div class="flex flex-col md:flex-row justify-between items-end gap-6">
-            <div class="flex-grow space-y-1">
-                <h2 class="text-3xl font-black text-slate-900 tracking-tight">Service History</h2>
-                <p class="text-sm text-slate-400 font-medium">Manage and track your calibration requests</p>
+        <!-- Welcome Section -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+            <div>
+                <h2 class="text-3xl font-black text-slate-800 tracking-tight">Business Overview</h2>
+                <p class="text-sm font-bold text-slate-400 mt-1">Manage your calibration service requests and history.</p>
             </div>
-            <div class="flex gap-4">
-                <div class="bg-white px-6 py-4 rounded-[1.5rem] border shadow-sm">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Lots</p>
-                    <p id="countLots" class="text-2xl font-black text-indigo-600">0</p>
+            <button onclick="window.location.href='customer_srf.html'" class="flex items-center justify-center gap-3 bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all">
+                <i data-lucide="plus-circle" class="w-5 h-5"></i> Create New SRF
+            </button>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="stat-card bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-4">
+                    <i data-lucide="file-text" class="w-6 h-6"></i>
                 </div>
-                <div class="bg-white px-6 py-4 rounded-[1.5rem] border shadow-sm">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Instruments</p>
-                    <p id="countItems" class="text-2xl font-black text-slate-800">0</p>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Requests</p>
+                <h3 id="statTotal" class="text-4xl font-black text-slate-800 mt-1">0</h3>
+            </div>
+            <div class="stat-card bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mb-4">
+                    <i data-lucide="clock" class="w-6 h-6"></i>
                 </div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pending Sync</p>
+                <h3 id="statPending" class="text-4xl font-black text-slate-800 mt-1">0</h3>
+            </div>
+            <div class="stat-card bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-4">
+                    <i data-lucide="check-circle" class="w-6 h-6"></i>
+                </div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Completed</p>
+                <h3 id="statDone" class="text-4xl font-black text-slate-800 mt-1">0</h3>
             </div>
         </div>
 
-        <!-- Toolbar -->
-        <div class="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-4 rounded-[2rem] border shadow-sm">
-            <div class="relative w-full md:w-96">
-                <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
-                <input type="text" id="searchBar" oninput="filterLots()" placeholder="Search by SRF ID or End Customer..." class="w-full pl-12 pr-4 py-3 bg-slate-50 border-2 border-transparent rounded-2xl outline-none focus:border-indigo-500 transition-all text-sm font-bold">
+        <!-- History Table -->
+        <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-slate-50 flex items-center justify-between">
+                <h3 class="font-black text-slate-800 uppercase text-sm tracking-tight">Recent Activity</h3>
+                <div id="tableLoader" class="loader-spin hidden"></div>
             </div>
-            <a href="editor.html" class="w-full md:w-auto px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all text-center flex items-center justify-center gap-2">
-                <i data-lucide="plus-circle" class="w-4 h-4"></i> New SRF Record
-            </a>
-        </div>
-
-        <!-- List View Container -->
-        <div class="bg-white rounded-[2.5rem] border shadow-sm overflow-hidden">
+            
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
-                    <thead class="bg-slate-50 border-b border-slate-100">
+                    <thead class="bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
                         <tr>
-                            <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">SRF ID</th>
-                            <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">End Customer (Site)</th>
-                            <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date Created</th>
-                            <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Qty</th>
-                            <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                            <th class="px-6 py-4">SRF Number</th>
+                            <th class="px-6 py-4">Location</th>
+                            <th class="px-6 py-4">Date</th>
+                            <th class="px-6 py-4 text-center">Items</th>
+                            <th class="px-6 py-4">Status</th>
+                            <th class="px-6 py-4 text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="lotTableBody">
+                    <tbody id="srfList" class="divide-y divide-slate-50">
                         <!-- Rows will be injected here -->
                     </tbody>
                 </table>
             </div>
-            
-            <!-- Empty State -->
-            <div id="emptyState" class="hidden py-24 text-center">
-                <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i data-lucide="folder-open" class="text-slate-200 w-10 h-10"></i>
-                </div>
-                <h3 class="text-slate-400 font-black uppercase text-xs tracking-widest">No matching records found</h3>
+
+            <div id="emptyState" class="hidden py-20 text-center">
+                <i data-lucide="inbox" class="w-12 h-12 text-slate-200 mx-auto mb-4"></i>
+                <p class="text-xs font-black text-slate-300 uppercase tracking-widest">No records found in your account.</p>
+                <button onclick="window.location.href='customer_srf.html'" class="mt-4 text-xs font-black text-indigo-600 uppercase underline decoration-2 underline-offset-4">Create your first SRF</button>
             </div>
         </div>
-
     </main>
 
     <script type="module">
         import { auth, db, APP_ID } from './config.js';
-        import { onAuthStateChanged, signOut as firebaseSignOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { collection, onSnapshot, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { onAuthStateChanged, signOut, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { collection, query, where, onSnapshot, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        let allUserLots = [];
+        let currentUser = null;
 
-        onAuthStateChanged(auth, async u => {
-            if(!u) {
-                window.location.href = 'index.html';
-            } else {
-                // Fetch Company Name for Header
-                fetchProfile(u.uid);
-                fetchHistory(u.email);
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                await signInAnonymously(auth);
+                return;
             }
+            currentUser = user;
+            fetchUserProfile();
+            loadUserSRFs();
         });
 
-        // Function to load Company Name in Header
-        async function fetchProfile(uid) {
-            try {
-                const profileRef = doc(db, 'artifacts', APP_ID, 'users', uid, 'settings', 'profile');
-                const snap = await getDoc(profileRef);
-                const headerTitle = document.getElementById('displayCompName');
-                
-                if(snap.exists()) {
-                    const data = snap.data();
-                    headerTitle.innerText = `${data.companyName} Dashboard`;
-                } else {
-                    headerTitle.innerText = "R1 Labs Dashboard";
-                }
-            } catch (e) {
-                console.error("Profile Fetch Error", e);
-                document.getElementById('displayCompName').innerText = "R1 Labs Dashboard";
+        async function fetchUserProfile() {
+            // Priority path for business info
+            let snap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'customers', currentUser.uid));
+            if(!snap.exists()) snap = await getDoc(doc(db, 'artifacts', APP_ID, 'users', currentUser.uid, 'settings', 'profile'));
+            
+            if(snap.exists()) {
+                document.getElementById('userCompany').innerText = snap.data().companyName || "Unknown Business";
             }
         }
 
-        function fetchHistory(email) {
-            const ref = collection(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots');
-            onSnapshot(ref, snap => {
-                allUserLots = snap.docs
-                    .map(d => ({ id: d.id, ...d.data() }))
-                    .filter(d => d.userEmail === email)
-                    .sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-
-                updateStats();
-                render(allUserLots);
+        function loadUserSRFs() {
+            document.getElementById('tableLoader').classList.remove('hidden');
+            
+            // Note: Since SRFs are in a public directory for Admin, we fetch all and filter in memory 
+            // OR we can use the userEmail field for better filtering.
+            const srfRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots');
+            
+            onSnapshot(srfRef, (snap) => {
+                const allDocs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                
+                // Filter by Email or UID (depending on what was saved)
+                const userDocs = allDocs.filter(d => d.userEmail === currentUser.email || d.userEmail === 'admin'); // Simplified for this context
+                
+                renderTable(userDocs);
+                updateStats(userDocs);
+                document.getElementById('tableLoader').classList.add('hidden');
+            }, (err) => {
+                console.error("Fetch Error:", err);
+                document.getElementById('tableLoader').classList.add('hidden');
             });
         }
 
-        function updateStats() {
-            document.getElementById('countLots').innerText = allUserLots.length;
-            const totalItems = allUserLots.reduce((acc, curr) => acc + (curr.total || 0), 0);
-            document.getElementById('countItems').innerText = totalItems;
-        }
-
-        window.filterLots = () => {
-            const term = document.getElementById('searchBar').value.toLowerCase();
-            const filtered = allUserLots.filter(l => 
-                l.srfId.toLowerCase().includes(term) || 
-                (l.endCustomerName && l.endCustomerName.toLowerCase().includes(term))
-            );
-            render(filtered);
-        }
-
-        function render(data) {
-            const body = document.getElementById('lotTableBody');
+        function renderTable(data) {
+            const list = document.getElementById('srfList');
             const empty = document.getElementById('emptyState');
-            body.innerHTML = '';
             
-            if(data.length === 0) {
+            if (data.length === 0) {
+                list.innerHTML = '';
                 empty.classList.remove('hidden');
                 return;
             }
+
             empty.classList.add('hidden');
-
-            data.forEach(l => {
-                const date = l.createdAt ? new Date(l.createdAt.toDate()).toLocaleDateString('en-GB', {
-                    day: '2-digit', month: 'short', year: 'numeric'
-                }) : 'Syncing...';
-
-                body.innerHTML += `
-                    <tr class="list-row">
-                        <td class="p-5">
-                            <span class="text-indigo-600 font-black tracking-tighter uppercase text-sm">${l.srfId}</span>
+            list.innerHTML = data.sort((a,b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0)).map(item => {
+                const date = item.jobDate ? new Date(item.jobDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A';
+                const statusColor = item.status === 'Completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100';
+                
+                return `
+                    <tr class="table-row">
+                        <td class="px-6 py-5">
+                            <p class="text-xs font-black text-indigo-600 uppercase tracking-tighter">${item.srfId}</p>
+                            <p class="text-[9px] font-bold text-slate-400 uppercase mt-0.5">${item.jobType || 'NABL'}</p>
                         </td>
-                        <td class="p-5">
-                            <div class="flex flex-col">
-                                <span class="font-bold text-slate-800 uppercase text-xs">${l.endCustomerName || l.companyName}</span>
-                                <span class="text-[9px] text-slate-400 font-medium truncate w-64">${l.endCustomerAddress || 'Primary Address'}</span>
-                            </div>
+                        <td class="px-6 py-5">
+                            <p class="text-xs font-bold text-slate-700 uppercase truncate w-48">${item.locationLabel || 'Main Site'}</p>
                         </td>
-                        <td class="p-5 text-xs font-bold text-slate-500">${date}</td>
-                        <td class="p-5 text-center">
-                            <span class="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-[10px] font-black">${l.total}</span>
+                        <td class="px-6 py-5 text-xs font-bold text-slate-500">${date}</td>
+                        <td class="px-6 py-5 text-center">
+                            <span class="px-2 py-1 bg-slate-100 rounded-lg text-[10px] font-black text-slate-600">${item.total || 0}</span>
                         </td>
-                        <td class="p-5 text-right space-x-2">
-                            <button onclick="window.location.href='editor.html?id=${l.id}'" class="p-2.5 text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all" title="View/Edit">
+                        <td class="px-6 py-5">
+                            <span class="px-3 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest ${statusColor}">
+                                ${item.status || 'Pending'}
+                            </span>
+                        </td>
+                        <td class="px-6 py-5 text-right">
+                            <button onclick="window.location.href='customer_srf.html?id=${item.id}'" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all">
                                 <i data-lucide="edit-3" class="w-4 h-4"></i>
-                            </button>
-                            <button class="p-2.5 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all" title="Download Details">
-                                <i data-lucide="external-link" class="w-4 h-4"></i>
                             </button>
                         </td>
                     </tr>
                 `;
-            });
+            }).join('');
             lucide.createIcons();
         }
 
+        function updateStats(data) {
+            document.getElementById('statTotal').innerText = data.length;
+            document.getElementById('statPending').innerText = data.filter(d => d.status !== 'Completed').length;
+            document.getElementById('statDone').innerText = data.filter(d => d.status === 'Completed').length;
+        }
+
         window.logout = () => {
-            if(confirm("Are you sure you want to sign out?")) {
-                firebaseSignOut(auth).then(() => window.location.href = 'index.html');
-            }
+            signOut(auth).then(() => window.location.href = 'index.html');
         };
 
         lucide.createIcons();
     </script>
 </body>
 </html>
-
 
