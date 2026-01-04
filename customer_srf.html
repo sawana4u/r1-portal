@@ -29,13 +29,13 @@
 
     <div id="pageLoader" class="fixed inset-0 bg-white z-[500] flex flex-col items-center justify-center transition-opacity duration-500">
         <div class="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-        <p class="mt-4 text-slate-500 font-bold text-xs uppercase tracking-widest italic">Syncing Portal...</p>
+        <p class="mt-4 text-slate-500 font-bold text-xs uppercase tracking-widest italic">Syncing Your Portal...</p>
     </div>
 
-    <!-- Popups -->
+    <!-- Modals -->
     <div id="rangeModal" class="modal">
         <div class="bg-white w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl">
-            <div class="flex justify-between items-center mb-6"><h3 class="text-lg font-black uppercase text-slate-800">Range Settings</h3><button onclick="closeModals()"><i data-lucide="x"></i></button></div>
+            <div class="flex justify-between items-center mb-6"><h3 class="text-lg font-black uppercase text-slate-800">Range Settings</h3><button onclick="closeModals()"><i data-lucide="x" class="text-slate-400"></i></button></div>
             <div id="rangeEntries" class="space-y-3 mb-6 max-h-60 overflow-y-auto custom-scrollbar pr-2"></div>
             <div class="flex gap-3"><button onclick="addRangeRow()" class="flex-grow py-3 border-2 border-dashed border-slate-200 rounded-xl text-[10px] font-black uppercase">+ Add Range</button><button onclick="saveRangeData()" class="px-8 py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase">Confirm</button></div>
         </div>
@@ -43,16 +43,16 @@
 
     <div id="lcModal" class="modal">
         <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl">
-            <div class="flex justify-between items-center mb-6"><h3 class="text-lg font-black uppercase text-slate-800">Least Count</h3><button onclick="closeModals()"><i data-lucide="x"></i></button></div>
+            <div class="flex justify-between items-center mb-6"><h3 class="text-lg font-black uppercase text-slate-800">Least Count</h3><button onclick="closeModals()"><i data-lucide="x" class="text-slate-400"></i></button></div>
             <div id="lcEntries" class="space-y-3 mb-6 max-h-60 overflow-y-auto custom-scrollbar pr-2"></div>
-            <datalist id="cust-unit-list"></datalist>
+            <datalist id="cust-unit-options"></datalist>
             <div class="flex gap-3"><button onclick="addLcRow()" class="flex-grow py-3 border-2 border-dashed border-slate-200 rounded-xl text-[10px] font-black uppercase">+ Add Value</button><button onclick="saveLcData()" class="px-8 py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase">Confirm</button></div>
         </div>
     </div>
 
     <div id="calModal" class="modal">
         <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl">
-            <div class="flex justify-between items-center mb-6"><h3 class="text-lg font-black uppercase text-slate-800">Calibration Point</h3><button onclick="closeModals()"><i data-lucide="x"></i></button></div>
+            <div class="flex justify-between items-center mb-6"><h3 class="text-lg font-black uppercase text-slate-800">Calibration Point</h3><button onclick="closeModals()"><i data-lucide="x" class="text-slate-400"></i></button></div>
             <div id="calEntries" class="space-y-3 mb-6 max-h-60 overflow-y-auto custom-scrollbar pr-2"></div>
             <div class="flex gap-3"><button onclick="addCalRow()" class="flex-grow py-3 border-2 border-dashed border-slate-200 rounded-xl text-[10px] font-black uppercase">+ Add Point</button><button onclick="saveCalData()" class="px-8 py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase">Confirm</button></div>
         </div>
@@ -136,7 +136,7 @@
         }
 
         function fillSites(exAddr = "") {
-            const select = document.getElementById('siteSelect'); select.innerHTML = '<option value="">-- Choose Pick-up Address --</option>';
+            const select = document.getElementById('siteSelect'); select.innerHTML = '<option value="">-- Choose Site --</option>';
             let sites = targetProfile.allSites || [];
             if(sites.length > 0) sites.forEach((s, i) => { const opt = document.createElement('option'); opt.value = i; opt.dataset.addr = s.siteAddress; opt.innerText = `Site: ${s.siteAddress.substring(0,35)}...`; select.appendChild(opt); if(exAddr && s.siteAddress === exAddr) select.selectedIndex = i + 1; });
             else if(targetProfile.address) { const opt = document.createElement('option'); opt.value = "main"; opt.dataset.addr = targetProfile.address; opt.innerText = "Primary Business Site"; select.appendChild(opt); }
@@ -162,10 +162,11 @@
             }; reader.readAsBinaryString(e.target.files[0]);
         };
 
-        // --- Hybrid Datalist Logic ---
-        const updateCustUnitList = () => {
-            const units = [...new Set((gridData[activeRowIdx]?.ranges || []).map(r => r.unit).filter(u => u.trim() !== ""))];
-            const dl = document.getElementById('cust-unit-list');
+        // Popups
+        const getUnits = () => [...new Set((gridData[activeRowIdx]?.ranges || []).map(r => r.unit).filter(u => u.trim() !== ""))];
+        const populateCustDatalist = () => {
+            const units = getUnits();
+            const dl = document.getElementById('cust-unit-options');
             dl.innerHTML = units.map(u => `<option value="${u}">`).join('');
         };
 
@@ -173,12 +174,12 @@
         window.addRangeRow = (d=null) => { const div = document.createElement('div'); div.className="flex gap-3 items-center mb-3"; div.innerHTML=`<input type="text" placeholder="Min" class="grid-input w-24 r-min" value="${d?.min||''}"> <span class="text-[10px] font-black text-slate-300 w-10 text-center uppercase">to</span> <input type="text" placeholder="Max" class="grid-input w-24 r-max" value="${d?.max||''}"> <input type="text" placeholder="Unit" class="grid-input w-32 r-unit" value="${d?.unit||''}"> <button onclick="this.parentElement.remove()" class="text-red-400"><i data-lucide="minus-circle"></i></button>`; document.getElementById('rangeEntries').appendChild(div); lucide.createIcons(); };
         window.saveRangeData = () => { gridData[activeRowIdx].ranges = Array.from(document.querySelectorAll('#rangeEntries > div')).map(div => ({ min: div.querySelector('.r-min').value, max: div.querySelector('.r-max').value, unit: div.querySelector('.r-unit').value })).filter(r => r.max); closeModals(); render(); };
         
-        window.openLcPopup = (idx) => { activeRowIdx = idx; updateCustUnitList(); const c = document.getElementById('lcEntries'); c.innerHTML = ''; (gridData[idx].lcs?.length ? gridData[idx].lcs : [{val:'', unit:''}]).forEach(l => addLcRow(l)); document.getElementById('lcModal').classList.add('active'); };
-        window.addLcRow = (d=null) => { const div = document.createElement('div'); div.className="flex gap-3 items-center mb-3"; div.innerHTML=`<input type="text" placeholder="Val" class="grid-input l-val" value="${d?.val||''}"> <input type="text" list="cust-unit-list" placeholder="Unit" class="grid-input w-32 l-unit" value="${d?.unit||''}"> <button onclick="this.parentElement.remove()" class="text-red-400"><i data-lucide="minus-circle"></i></button>`; document.getElementById('lcEntries').appendChild(div); lucide.createIcons(); };
+        window.openLcPopup = (idx) => { activeRowIdx = idx; populateCustDatalist(); const c = document.getElementById('lcEntries'); c.innerHTML = ''; (gridData[idx].lcs?.length ? gridData[idx].lcs : [{val:'', unit:''}]).forEach(l => addLcRow(l)); document.getElementById('lcModal').classList.add('active'); };
+        window.addLcRow = (d=null) => { const div = document.createElement('div'); div.className="flex gap-3 items-center mb-3"; div.innerHTML=`<input type="text" placeholder="Val" class="grid-input l-val" value="${d?.val||''}"> <input type="text" list="cust-unit-options" placeholder="Unit" class="grid-input w-40 l-unit" value="${d?.unit||''}"> <button onclick="this.parentElement.remove()" class="text-red-400"><i data-lucide="minus-circle"></i></button>`; document.getElementById('lcEntries').appendChild(div); lucide.createIcons(); };
         window.saveLcData = () => { gridData[activeRowIdx].lcs = Array.from(document.querySelectorAll('#lcEntries > div')).map(div => ({ val: div.querySelector('.l-val').value, unit: div.querySelector('.l-unit').value })).filter(l => l.val); closeModals(); render(); };
 
-        window.openCalPopup = (idx) => { activeRowIdx = idx; updateCustUnitList(); const c = document.getElementById('calEntries'); c.innerHTML = ''; (gridData[idx].calPoints?.length ? gridData[idx].calPoints : [{val:'', unit:''}]).forEach(l => addCalRow(l)); document.getElementById('calModal').classList.add('active'); };
-        window.addCalRow = (d=null) => { const div = document.createElement('div'); div.className="flex gap-3 items-center mb-3"; div.innerHTML=`<input type="text" placeholder="Value" class="grid-input c-val" value="${d?.val||''}"> <input type="text" list="cust-unit-list" placeholder="Unit" class="grid-input w-32 c-unit" value="${d?.unit||''}"> <button onclick="this.parentElement.remove()" class="text-red-400"><i data-lucide="minus-circle"></i></button>`; document.getElementById('calEntries').appendChild(div); lucide.createIcons(); };
+        window.openCalPopup = (idx) => { activeRowIdx = idx; populateCustDatalist(); const c = document.getElementById('calEntries'); c.innerHTML = ''; (gridData[idx].calPoints?.length ? gridData[idx].calPoints : [{val:'', unit:''}]).forEach(l => addCalRow(l)); document.getElementById('calModal').classList.add('active'); };
+        window.addCalRow = (d=null) => { const div = document.createElement('div'); div.className="flex gap-3 items-center mb-3"; div.innerHTML=`<input type="text" placeholder="Value" class="grid-input c-val" value="${d?.val||''}"> <input type="text" list="cust-unit-options" placeholder="Unit" class="grid-input w-40 c-unit" value="${d?.unit||''}"> <button onclick="this.parentElement.remove()" class="text-red-400"><i data-lucide="minus-circle"></i></button>`; document.getElementById('calEntries').appendChild(div); lucide.createIcons(); };
         window.saveCalData = () => { gridData[activeRowIdx].calPoints = Array.from(document.querySelectorAll('#calEntries > div')).map(div => ({ val: div.querySelector('.c-val').value, unit: div.querySelector('.c-unit').value })).filter(l => l.val); closeModals(); render(); };
 
         window.closeModals = () => { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); activeRowIdx = null; };
@@ -192,7 +193,7 @@
         function render() {
             document.getElementById('gridBody').innerHTML = gridData.map((r, i) => `
                 <tr class="hover:bg-slate-50 transition-all border-b group">
-                    <td class="p-5 sticky-col text-center font-bold text-slate-300">${i+1}</td>
+                    <td class="p-5 sticky-col text-center font-bold text-slate-300 text-[11px]">${i+1}</td>
                     <td class="p-2"><input type="text" class="grid-input font-bold ${!r.name && validationErrors.includes(i) ? 'input-error' : ''}" value="${r.name||''}" oninput="upd(${i},'name',this.value, this)"></td>
                     <td class="p-2"><input type="text" class="grid-input" value="${r.make||''}" oninput="upd(${i},'make',this.value)"></td>
                     <td class="p-2"><input type="text" class="grid-input" value="${r.model||''}" oninput="upd(${i},'model',this.value)"></td>
@@ -214,7 +215,8 @@
             validationErrors = []; let hasErr = false;
             if(!document.getElementById('siteSelect').value) { document.getElementById('siteBlock').classList.add('block-error'); hasErr = true; }
             gridData.forEach((r, idx) => { if(!r.name || !r.idNo) { validationErrors.push(idx); hasErr = true; } });
-            if(hasErr) { render(); return alert("Name aur ID No mandatory hain!"); }
+            if(hasErr) { render(); return alert("Name aur ID Number fill karein!"); }
+
             const btn = document.getElementById('subBtn'); btn.disabled = true; btn.innerText = "Saving...";
             const payload = {
                 srfId: `REQ-${Date.now().toString().slice(-6)}`, jobType: 'NABL', jobDate: new Date().toISOString().split('T')[0],
@@ -224,8 +226,8 @@
             try {
                 if(docId) await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots', docId), payload, { merge: true });
                 else { payload.createdAt = serverTimestamp(); const res = await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots'), payload); docId = res.id; }
-                alert("SRF Data Saved! ✅"); btn.disabled = false; btn.innerText = "Update Record";
-            } catch(e) { alert("Save failed."); btn.disabled = false; }
+                alert("SRF Saved Successfully! ✅"); btn.disabled = false; btn.innerText = "Update Record";
+            } catch(e) { alert("Save error."); btn.disabled = false; }
         };
         lucide.createIcons();
     </script>
