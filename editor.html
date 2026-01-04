@@ -20,6 +20,8 @@
         .btn-outline:hover { background: #f5f3ff; }
         .btn-secondary { background: #fff; border: 1.5px solid #e2e8f0; color: #64748b; }
         .btn-secondary:hover { background: #f8fafc; color: #4f46e5; border-color: #4f46e5; }
+        .btn-admin { background: #fff7ed; border: 1.5px solid #fb923c; color: #ea580c; }
+        .btn-admin:hover { background: #ffedd5; }
         .control-btn { padding: 6px; border-radius: 8px; transition: all 0.2s; color: #94a3b8; display: flex; align-items: center; justify-content: center; }
         .control-btn:hover { background-color: #f1f5f9; color: #4f46e5; }
         .modal { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; }
@@ -35,7 +37,7 @@
     <!-- Screen Loader -->
     <div id="pageLoader" class="fixed inset-0 bg-white z-[500] flex flex-col items-center justify-center">
         <div class="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-        <p class="mt-4 text-slate-500 font-bold text-xs uppercase tracking-widest">Loading Master Editor...</p>
+        <p class="mt-4 text-slate-500 font-bold text-xs uppercase tracking-widest">Master Engine Loading...</p>
     </div>
 
     <!-- Modals (Range & LC) -->
@@ -72,7 +74,7 @@
                     </button>
                     <div>
                         <div class="flex items-center gap-2 mb-0.5">
-                            <span class="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[9px] font-black uppercase rounded-md">Editor v4.0</span>
+                            <span class="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[9px] font-black uppercase rounded-md">Editor v4.1</span>
                             <h1 class="text-lg font-black uppercase tracking-tighter text-slate-800">Master SRF Entry</h1>
                         </div>
                         <div id="compDisplay" class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] flex items-center gap-1">
@@ -94,35 +96,40 @@
             <!-- Row 2: Job Settings & Tools -->
             <div class="bg-slate-50 border-t border-slate-100 px-4 py-3 flex flex-col lg:flex-row justify-between items-center gap-4">
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3 w-full lg:w-auto">
-                    <div class="min-w-[140px]">
-                        <label class="text-[8px] font-black uppercase text-slate-400 tracking-widest mb-1 block ml-1">Job Category</label>
+                    <div>
+                        <label class="text-[8px] font-black uppercase text-slate-400 mb-1 block ml-1">Job Category</label>
                         <select id="jobType" onchange="updateJobNo()" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-bold outline-none focus:border-indigo-500">
                             <option value="NABL">NABL (Standard)</option>
                             <option value="NON NABL">NON NABL (Traceable)</option>
                         </select>
                     </div>
-                    <div class="min-w-[140px]">
-                        <label class="text-[8px] font-black uppercase text-slate-400 tracking-widest mb-1 block ml-1">Job Date</label>
+                    <div>
+                        <label class="text-[8px] font-black uppercase text-slate-400 mb-1 block ml-1">Job Date</label>
                         <input type="date" id="jobDate" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-bold outline-none">
                     </div>
-                    <div class="min-w-[140px]">
-                        <label class="text-[8px] font-black uppercase text-slate-400 tracking-widest mb-1 block ml-1">Receipt Date</label>
+                    <div>
+                        <label class="text-[8px] font-black uppercase text-slate-400 mb-1 block ml-1">Receipt Date</label>
                         <input type="date" id="receiptDate" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-bold outline-none">
                     </div>
-                    <div class="min-w-[160px]">
-                        <label class="text-[8px] font-black uppercase text-slate-400 tracking-widest mb-1 block ml-1">Generated Job No.</label>
+                    <div>
+                        <label class="text-[8px] font-black uppercase text-slate-400 mb-1 block ml-1">Generated Job No.</label>
                         <input type="text" id="jobNoDisplay" readonly class="w-full p-2 bg-indigo-50 border border-indigo-100 rounded-lg text-[11px] font-black text-indigo-600 uppercase">
                     </div>
                 </div>
 
                 <div class="flex items-center gap-2 w-full lg:w-auto border-t lg:border-t-0 pt-3 lg:pt-0">
-                    <span class="text-[9px] font-black text-slate-300 uppercase mr-2 hidden lg:block">Data Tools:</span>
                     <input type="file" id="excelInput" class="hidden" accept=".xlsx, .xls" onchange="importExcel(event)">
-                    <button onclick="document.getElementById('excelInput').click()" class="btn-action btn-secondary flex-1 lg:flex-none">
-                        <i data-lucide="file-up" class="w-4 h-4"></i> Import Excel
+                    
+                    <!-- ADMIN ONLY: DOWNLOAD SRF AS EXCEL -->
+                    <button onclick="exportSRFToExcel()" class="btn-action btn-admin admin-col hidden">
+                        <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Export SRF
                     </button>
-                    <button onclick="downloadTemplate()" class="btn-action btn-secondary flex-1 lg:flex-none">
-                        <i data-lucide="download" class="w-4 h-4"></i> Get Template
+
+                    <button onclick="document.getElementById('excelInput').click()" class="btn-action btn-secondary">
+                        <i data-lucide="file-up" class="w-4 h-4"></i> Import
+                    </button>
+                    <button onclick="downloadTemplate()" class="btn-action btn-secondary">
+                        <i data-lucide="download" class="w-4 h-4"></i> Template
                     </button>
                 </div>
             </div>
@@ -142,9 +149,9 @@
                 <div class="p-2 bg-indigo-500/20 rounded-lg"><i data-lucide="map-pin" class="w-4 h-4 text-indigo-400"></i></div>
                 <div>
                     <h4 id="displayLabel" class="text-[11px] font-black text-white uppercase tracking-wider">No Site Selected</h4>
-                    <p id="displayAddress" class="text-[10px] font-medium text-slate-400 italic">Select a registered site to proceed with saving...</p>
+                    <p id="displayAddress" class="text-[10px] font-medium text-slate-400 italic">Select a registered site to proceed...</p>
                 </div>
-                <span id="savedBadge" class="hidden ml-auto px-2 py-1 bg-emerald-500/20 text-emerald-400 text-[8px] font-black uppercase rounded border border-emerald-500/30">Locked</span>
+                <span id="savedBadge" class="hidden ml-auto px-2 py-1 bg-emerald-500/20 text-emerald-400 text-[8px] font-black uppercase rounded border border-emerald-500/30">Sync Locked</span>
             </div>
         </div>
     </section>
@@ -290,6 +297,52 @@
             return { name: '', format: '', make: '', model: '', srNo: '', idNo: '', ranges: [], sizes: '', lcs: [], accuracy: '', location: '', calDate: '', engineer: '' };
         }
 
+        // --- EXCEL LOGIC ---
+        window.exportSRFToExcel = () => {
+            if(!gridData.length) return alert("No data to export!");
+            
+            const jobNo = document.getElementById('jobNoDisplay').value;
+            const jobType = document.getElementById('jobType').value;
+            const client = targetProfile.companyName || 'Unknown_Client';
+
+            // Prepare Data for Excel
+            const excelRows = gridData.map((r, i) => {
+                // Flatten Ranges to string
+                const rangeStr = r.ranges?.map(x => `${x.min} to ${x.max} ${x.unit}`).join(', ') || '';
+                // Flatten LCs to string
+                const lcStr = r.lcs?.map(x => `${x.val} ${x.unit}`).join(', ') || '';
+
+                return {
+                    "Sr. No.": i + 1,
+                    "Instrument Name": r.name,
+                    "Format": r.format,
+                    "Make": r.make,
+                    "Model": r.model,
+                    "Serial No.": r.srNo,
+                    "ID No.": r.idNo,
+                    "Range": rangeStr,
+                    "Size": r.sizes,
+                    "L.C.": lcStr,
+                    "Accuracy": r.accuracy,
+                    "Location": r.location,
+                    "Cal Date": r.calDate,
+                    "Engineer": r.engineer
+                };
+            });
+
+            // Add Header Info row at the top
+            const finalData = [
+                { "Sr. No.": "JOB NO:", "Instrument Name": jobNo, "Format": "TYPE:", "Make": jobType, "Model": "CLIENT:", "Serial No.": client },
+                {}, // Empty row
+                ...excelRows
+            ];
+
+            const ws = XLSX.utils.json_to_sheet(finalData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "SRF_DATA");
+            XLSX.writeFile(wb, `SRF_${jobNo.replace(/\//g, '-')}.xlsx`);
+        };
+
         window.downloadTemplate = () => {
             const headers = [["Instrument Name", "Make", "Model", "Serial No", "ID No", "Range", "Size", "LC", "Accuracy", "Location", "Cal Date"]];
             const ws = XLSX.utils.aoa_to_sheet(headers);
@@ -315,6 +368,7 @@
             reader.readAsBinaryString(file);
         };
 
+        // --- POPUP LOGIC ---
         window.openRangePopup = (idx) => {
             activeRowIdx = idx;
             const container = document.getElementById('rangeEntries');
@@ -379,6 +433,7 @@
 
         window.closeModals = () => { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); activeRowIdx = null; };
 
+        // --- GRID CORE ---
         window.addRow = () => { gridData.push(createBlankRow()); render(); };
         window.duplicateRow = (i) => { gridData.splice(i + 1, 0, JSON.parse(JSON.stringify(gridData[i]))); render(); };
         window.moveRow = (i, d) => {
@@ -434,8 +489,8 @@
             try {
                 if(docId) await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots', docId), payload, { merge: true });
                 else { payload.createdAt = serverTimestamp(); await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots'), payload); }
-                alert("Saved! ✅"); window.location.href = isAdmin ? 'admin.html' : 'dashboard.html';
-            } catch(e) { alert("Fail."); btn.disabled = false; }
+                alert("Master SRF Record Saved! ✅"); window.location.href = isAdmin ? 'admin.html' : 'dashboard.html';
+            } catch(e) { alert("Save Error."); btn.disabled = false; }
         };
         lucide.createIcons();
     </script>
