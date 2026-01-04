@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer SRF Portal | R1 Tech Labs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
+        body { font-family: 'Outfit', sans-serif; background-color: #f8fafc; color: #1e293b; overflow-x: hidden; }
+        .grid-input { width: 100%; padding: 8px; border: 1.5px solid #e2e8f0; font-size: 11px; outline: none; border-radius: 8px; font-weight: 600; transition: all 0.2s; }
+        .grid-input:focus { border-color: #4f46e5; background-color: #f5f3ff; }
+        
+        .input-error { border-color: #ef4444 !important; background-color: #fef2f2 !important; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1); }
+        .block-error { border: 2px solid #ef4444 !important; animation: shake 0.4s ease-in-out; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+
+        .sticky-col { position: sticky; left: 0; background: #fff; z-index: 10; border-right: 2px solid #f1f5f9; }
+        .btn-action { transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 800; text-transform: uppercase; font-size: 10px; padding: 10px 18px; border-radius: 12px; }
+        .btn-primary { background: #4f46e5; color: #fff; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2); }
+        .btn-outline { border: 2px solid #4f46e5; color: #4f46e5; }
+        .btn-secondary { background: #fff; border: 1.5px solid #e2e8f0; color: #64748b; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .cell-popup-trigger { cursor: pointer; background: #f8fafc; border: 1.5px dashed #e2e8f0; font-size: 10px; font-weight: 700; text-align: center; transition: all 0.2s; min-height: 34px; display: flex; align-items: center; justify-content: center; padding: 0 8px; border-radius: 8px; }
+        .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <div id="pageLoader" class="fixed inset-0 bg-white z-[500] flex flex-col items-center justify-center">
+        <div class="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+        <p class="mt-4 text-slate-500 font-bold text-xs uppercase tracking-widest">Loading Customer Portal...</p>
+    </div>
+
+    <!-- Modals -->
+    <div id="rangeModal" class="modal">
+        <div class="bg-white w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl">
+            <div class="flex justify-between items-center mb-6"><h3 class="text-lg font-black uppercase tracking-tight">Range Definition</h3><button onclick="closeModals()"><i data-lucide="x" class="text-slate-400"></i></button></div>
+            <div id="rangeEntries" class="space-y-3 mb-6 max-h-60 overflow-y-auto custom-scrollbar pr-2"></div>
+            <div class="flex gap-3">
+                <button onclick="addRangeRow()" class="flex-grow py-3 border-2 border-dashed border-slate-200 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:border-indigo-600">+ Add Range</button>
+                <button onclick="saveRangeData()" class="px-8 py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="lcModal" class="modal">
+        <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl">
+            <div class="flex justify-between items-center mb-6"><h3 class="text-lg font-black uppercase tracking-tight">Least Count</h3><button onclick="closeModals()"><i data-lucide="x" class="text-slate-400"></i></button></div>
+            <div id="lcEntries" class="space-y-3 mb-6 max-h-60 overflow-y-auto custom-scrollbar pr-2"></div>
+            <div class="flex gap-3">
+                <button onclick="addLcRow()" class="flex-grow py-3 border-2 border-dashed border-slate-200 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:border-indigo-600">+ Add Value</button>
+                <button onclick="saveLcData()" class="px-8 py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <header class="bg-white border-b sticky top-0 z-50 shadow-sm">
+        <div class="max-w-[1800px] mx-auto">
+            <div class="flex flex-col lg:flex-row justify-between items-center p-4 gap-4">
+                <div class="flex items-center gap-4">
+                    <button onclick="history.back()" class="p-2.5 bg-slate-100 rounded-xl text-slate-500 hover:bg-slate-200 transition-all"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+                    <div>
+                        <div class="flex items-center gap-2 mb-0.5">
+                            <span class="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[9px] font-black uppercase rounded-md">Customer Portal</span>
+                            <h1 class="text-lg font-black uppercase tracking-tighter text-slate-800">New SRF Entry</h1>
+                        </div>
+                        <div id="compDisplay" class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] italic">Loading Account...</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 w-full lg:w-auto">
+                    <button onclick="addRow()" class="btn-action btn-outline flex-1 lg:flex-none"><i data-lucide="plus" class="w-4 h-4"></i> Add Row</button>
+                    <button onclick="submitSRF()" id="subBtn" class="btn-action btn-primary px-10 flex-1 lg:flex-none"><i data-lucide="send" class="w-4 h-4"></i> Submit SRF</button>
+                </div>
+            </div>
+
+            <div id="jobSettingsBlock" class="bg-slate-50 border-t border-slate-100 px-4 py-3 flex flex-col lg:flex-row justify-between items-center gap-4 transition-all duration-300">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 w-full lg:w-auto">
+                    <div>
+                        <label class="text-[8px] font-black text-slate-400 mb-1 block ml-1 uppercase">Job Category</label>
+                        <select id="jobType" onchange="updateJobNo()" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-bold outline-none">
+                            <option value="NABL">NABL</option>
+                            <option value="NON NABL">NON NABL</option>
+                        </select>
+                    </div>
+                    <div><label class="text-[8px] font-black text-slate-400 mb-1 block ml-1 uppercase">Job Date</label><input type="date" id="jobDate" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-bold"></div>
+                    <div><label class="text-[8px] font-black text-slate-400 mb-1 block ml-1 uppercase">Receipt Date</label><input type="date" id="receiptDate" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-bold"></div>
+                    <div><label class="text-[8px] font-black text-slate-400 mb-1 block ml-1 uppercase">SRF Number</label><input type="text" id="jobNoDisplay" readonly class="w-full p-2 bg-indigo-50 border border-indigo-100 rounded-lg text-[11px] font-black text-indigo-600 uppercase"></div>
+                </div>
+                <div class="flex items-center gap-2 w-full lg:w-auto">
+                    <input type="file" id="excelInput" class="hidden" accept=".xlsx, .xls" onchange="importExcel(event)">
+                    <button onclick="document.getElementById('excelInput').click()" class="btn-action btn-secondary"><i data-lucide="file-up" class="w-4 h-4"></i> Import Excel</button>
+                    <button onclick="downloadTemplate()" class="btn-action btn-secondary"><i data-lucide="download" class="w-4 h-4"></i> Template</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section id="siteBlock" class="bg-slate-900 px-6 py-4 text-white transition-all duration-300">
+        <div class="max-w-[1800px] mx-auto flex flex-col md:flex-row items-center gap-6">
+            <div class="w-full md:w-72">
+                <label class="text-[9px] font-black uppercase text-slate-500 mb-1.5 block">Pick-up Site</label>
+                <select id="siteSelect" onchange="handleSiteSelect()" class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs font-bold outline-none focus:border-indigo-500">
+                    <option value="">-- Select Your Site --</option>
+                </select>
+            </div>
+            <div class="flex-grow p-3 bg-white/5 border border-white/10 rounded-xl flex items-center gap-4">
+                <div class="p-2 bg-indigo-500/20 rounded-lg"><i data-lucide="map-pin" class="w-4 h-4 text-indigo-400"></i></div>
+                <div><h4 id="displayLabel" class="text-[11px] font-black uppercase">No Site Selected</h4><p id="displayAddress" class="text-[10px] text-slate-400 italic">Please choose your pick-up address...</p></div>
+            </div>
+        </div>
+    </section>
+
+    <main class="flex-grow overflow-auto p-4 custom-scrollbar">
+        <div class="bg-white rounded-3xl border shadow-xl overflow-hidden min-w-[2000px]">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-slate-900 text-[10px] text-slate-400 font-black uppercase tracking-widest border-b border-slate-800">
+                    <tr>
+                        <th class="p-5 sticky-col w-[60px] text-center">Sr.</th>
+                        <th class="p-5 w-[250px]">Instrument Name *</th>
+                        <th class="p-5 w-[120px]">Make</th>
+                        <th class="p-5 w-[120px]">Model</th>
+                        <th class="p-5 w-[150px]">Serial No.</th>
+                        <th class="p-5 w-[150px]">ID No. *</th>
+                        <th class="p-5 w-[200px]">Range (Pop-up)</th>
+                        <th class="p-5 w-[100px]">Size</th>
+                        <th class="p-5 w-[150px]">L.C. (Pop-up)</th>
+                        <th class="p-5 w-[120px]">Accuracy</th>
+                        <th class="p-5 w-[150px]">Location</th>
+                        <th class="p-5 w-[130px]">Cal Date</th>
+                        <th class="p-5 w-[180px] text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="gridBody" class="divide-y divide-slate-50"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <script type="module">
+        import { auth, db, APP_ID } from './config.js';
+        import { onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { collection, setDoc, doc, getDoc, addDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        let user = null, gridData = [], docId = null, targetProfile = {}, activeRowIdx = null;
+        let validationErrors = [];
+
+        const params = new URLSearchParams(window.location.search);
+        docId = params.get('id');
+
+        onAuthStateChanged(auth, async u => {
+            if(!u) { await signInAnonymously(auth); return; }
+            user = u;
+            await fetchProfile(u.uid);
+            if(docId) await loadLot(docId);
+            else await setupNewSRF();
+            document.getElementById('pageLoader').style.display = 'none';
+        });
+
+        async function fetchProfile(uid) {
+            let snap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'customers', uid));
+            if(!snap.exists()) snap = await getDoc(doc(db, 'artifacts', APP_ID, 'users', uid, 'settings', 'profile'));
+            if(snap.exists()) { targetProfile = snap.data(); document.getElementById('compDisplay').innerText = `Welcome, ${targetProfile.companyName}`; fillSites(); }
+        }
+
+        function fillSites() {
+            const select = document.getElementById('siteSelect');
+            select.innerHTML = `<option value="">-- Choose Site --</option>`;
+            if(targetProfile.allSites) { targetProfile.allSites.forEach((s, i) => { const opt = document.createElement('option'); opt.value = i; opt.dataset.addr = s.siteAddress; opt.innerText = `Site: ${s.siteAddress.substring(0,30)}...`; select.appendChild(opt); }); }
+        }
+
+        window.handleSiteSelect = () => {
+            const opt = document.getElementById('siteSelect').options[document.getElementById('siteSelect').selectedIndex];
+            document.getElementById('displayAddress').innerText = opt.value !== "" ? opt.dataset.addr : "Please select your site...";
+            document.getElementById('displayLabel').innerText = opt.value !== "" ? opt.text : "No Site Selected";
+            document.getElementById('siteBlock').classList.remove('block-error');
+        }
+
+        window.updateJobNo = async () => {
+            const type = document.getElementById('jobType').value;
+            const now = new Date(), yy = now.getFullYear().toString().slice(-2), mm = (now.getMonth() + 1).toString().padStart(2, '0');
+            const code = type === 'NABL' ? 'C' : 'NC';
+            const snap = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots'));
+            const count = snap.docs.filter(d => d.data().jobType === type).length + 1;
+            document.getElementById('jobNoDisplay').value = `R1/${yy}${mm}/${code}${count.toString().padStart(3, '0')}`;
+        };
+
+        async function setupNewSRF() { document.getElementById('jobDate').valueAsDate = new Date(); document.getElementById('receiptDate').valueAsDate = new Date(); await updateJobNo(); gridData = [createBlankRow()]; render(); }
+
+        async function loadLot(id) {
+            const snap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots', id));
+            if(snap.exists()) { const d = snap.data(); document.getElementById('jobType').value = d.jobType; document.getElementById('jobDate').value = d.jobDate; document.getElementById('receiptDate').value = d.receiptDate; document.getElementById('jobNoDisplay').value = d.srfId; gridData = d.items || []; render(); }
+        }
+
+        function createBlankRow() { return { name: '', make: '', model: '', srNo: '', idNo: '', ranges: [], sizes: '', lcs: [], accuracy: '', location: '', calDate: '' }; }
+
+        window.downloadTemplate = () => { const ws = XLSX.utils.aoa_to_sheet([["Instrument Name", "Make", "Model", "Serial No", "ID No", "Range", "Size", "L.C.", "Accuracy", "Location", "Cal Date"]]); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Template"); XLSX.writeFile(wb, "R1_Instrument_Template.xlsx"); };
+
+        window.importExcel = (e) => {
+            const reader = new FileReader(); reader.onload = (evt) => {
+                const wb = XLSX.read(evt.target.result, { type: 'binary' }); const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+                gridData = rows.map(r => ({ name: r['Instrument Name']||'', make: r['Make']||'', model: r['Model']||'', srNo: r['Serial No']||'', idNo: r['ID No']||'', ranges: [], sizes: r['Size']||'', lcs: [], accuracy: r['Accuracy']||'', location: r['Location']||'', calDate: r['Cal Date']||'' }));
+                render();
+            }; reader.readAsBinaryString(e.target.files[0]);
+        };
+
+        window.openRangePopup = (idx) => { activeRowIdx = idx; const c = document.getElementById('rangeEntries'); c.innerHTML = ''; (gridData[idx].ranges?.length ? gridData[idx].ranges : [{min:'', max:'', unit:''}]).forEach(r => addRangeRow(r)); document.getElementById('rangeModal').classList.add('active'); };
+        window.addRangeRow = (d=null) => { const div = document.createElement('div'); div.className="flex gap-2 items-center mb-2"; div.innerHTML=`<input type="text" placeholder="Min" class="grid-input w-20 r-min" value="${d?.min||''}"> <span class="text-[10px] font-bold text-slate-300 w-8 text-center">to</span> <input type="text" placeholder="Max" class="grid-input w-20 r-max" value="${d?.max||''}"> <input type="text" placeholder="Unit" class="grid-input w-24 r-unit" value="${d?.unit||''}"> <button onclick="this.parentElement.remove()" class="text-red-300 hover:text-red-500"><i data-lucide="minus-circle" class="w-4 h-4"></i></button>`; document.getElementById('rangeEntries').appendChild(div); lucide.createIcons(); };
+        window.saveRangeData = () => { gridData[activeRowIdx].ranges = Array.from(document.querySelectorAll('#rangeEntries > div')).map(div => ({ min: div.querySelector('.r-min').value, max: div.querySelector('.r-max').value, unit: div.querySelector('.r-unit').value })).filter(r => r.max); closeModals(); render(); };
+        window.openLcPopup = (idx) => { activeRowIdx = idx; const c = document.getElementById('lcEntries'); c.innerHTML = ''; (gridData[idx].lcs?.length ? gridData[idx].lcs : [{val:'', unit:''}]).forEach(l => addLcRow(l)); document.getElementById('lcModal').classList.add('active'); };
+        window.addLcRow = (d=null) => { const div = document.createElement('div'); div.className="flex gap-2 items-center mb-2"; div.innerHTML=`<input type="text" placeholder="Val" class="grid-input l-val" value="${d?.val||''}"> <input type="text" placeholder="Unit" class="grid-input w-24 l-unit" value="${d?.unit||''}"> <button onclick="this.parentElement.remove()" class="text-red-300 hover:text-red-500"><i data-lucide="minus-circle" class="w-4 h-4"></i></button>`; document.getElementById('lcEntries').appendChild(div); lucide.createIcons(); };
+        window.saveLcData = () => { gridData[activeRowIdx].lcs = Array.from(document.querySelectorAll('#lcEntries > div')).map(div => ({ val: div.querySelector('.l-val').value, unit: div.querySelector('.l-unit').value })).filter(l => l.val); closeModals(); render(); };
+        window.closeModals = () => { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); activeRowIdx = null; };
+
+        window.addRow = () => { gridData.push(createBlankRow()); render(); };
+        window.duplicateRow = (i) => { gridData.splice(i+1, 0, JSON.parse(JSON.stringify(gridData[i]))); render(); };
+        window.moveRow = (i, d) => { const t = i + d; if(t >= 0 && t < gridData.length) { [gridData[i], gridData[t]] = [gridData[t], gridData[i]]; render(); } };
+        window.del = (i) => { if(confirm("Remove?")) { gridData.splice(i,1); render(); } };
+        
+        window.upd = (i, k, v, el = null) => { 
+            gridData[i][k] = v; 
+            if(el && v.trim() !== "") el.classList.remove('input-error');
+        };
+
+        function render() {
+            document.getElementById('gridBody').innerHTML = gridData.map((r, i) => `
+                <tr class="hover:bg-slate-50 transition-all border-b group">
+                    <td class="p-4 sticky-col text-center font-bold text-slate-300 text-[11px]">${i+1}</td>
+                    <td class="p-2"><input type="text" class="grid-input font-bold ${!r.name && validationErrors.includes(i) ? 'input-error' : ''}" value="${r.name||''}" placeholder="Instrument Name" oninput="upd(${i},'name',this.value, this)"></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${r.make||''}" oninput="upd(${i},'make',this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${r.model||''}" oninput="upd(${i},'model',this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${r.srNo||''}" oninput="upd(${i},'srNo',this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input text-indigo-600 font-bold ${!r.idNo && validationErrors.includes(i) ? 'input-error' : ''}" value="${r.idNo||''}" placeholder="ID No" oninput="upd(${i},'idNo',this.value, this)"></td>
+                    <td class="p-2"><div onclick="openRangePopup(${i})" class="cell-popup-trigger truncate">${r.ranges?.map(x=>`${x.min} to ${x.max}${x.unit}`).join(', ')||'Set Range'}</div></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${r.sizes||''}" oninput="upd(${i},'sizes',this.value)"></td>
+                    <td class="p-2"><div onclick="openLcPopup(${i})" class="cell-popup-trigger truncate">${r.lcs?.map(x=>`${x.val}${x.unit}`).join(', ')||'Set LC'}</div></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${r.accuracy||''}" oninput="upd(${i},'accuracy',this.value)"></td>
+                    <td class="p-2"><input type="text" class="grid-input" value="${r.location||''}" oninput="upd(${i},'location',this.value)"></td>
+                    <td class="p-2"><input type="date" class="grid-input" value="${r.calDate||''}" oninput="upd(${i},'calDate',this.value)"></td>
+                    <td class="p-5 text-center"><div class="flex justify-center gap-1">
+                        <button onclick="moveRow(${i},-1)" class="control-btn"><i data-lucide="chevron-up" class="w-4 h-4"></i></button>
+                        <button onclick="moveRow(${i},1)" class="control-btn"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>
+                        <button onclick="duplicateRow(${i})" class="control-btn"><i data-lucide="copy" class="w-4 h-4"></i></button>
+                        <button onclick="del(${i})" class="control-btn hover:text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div></td>
+                </tr>`).join('');
+            lucide.createIcons();
+        }
+
+        window.submitSRF = async () => {
+            validationErrors = [];
+            let hasErrors = false;
+
+            if(!document.getElementById('siteSelect').value) { document.getElementById('siteBlock').classList.add('block-error'); hasErrors = true; }
+            if(!document.getElementById('jobDate').value) { document.getElementById('jobSettingsBlock').classList.add('block-error'); hasErrors = true; }
+
+            gridData.forEach((r, idx) => { if(!r.name || !r.idNo) { validationErrors.push(idx); hasErrors = true; } });
+
+            if(hasErrors) {
+                render();
+                setTimeout(() => { document.getElementById('jobSettingsBlock').classList.remove('block-error'); document.getElementById('siteBlock').classList.remove('block-error'); }, 1000);
+                return alert("Kuch fields khali hain, kripya check karein!");
+            }
+
+            const btn = document.getElementById('subBtn'); btn.disabled = true; btn.innerText = "Submitting...";
+            const payload = {
+                srfId: document.getElementById('jobNoDisplay').value, jobType: document.getElementById('jobType').value,
+                jobDate: document.getElementById('jobDate').value, receiptDate: document.getElementById('receiptDate').value,
+                companyName: targetProfile.companyName, endCustomerAddress: document.getElementById('displayAddress').innerText, locationLabel: document.getElementById('displayLabel').innerText,
+                items: gridData, total: gridData.length, updatedAt: serverTimestamp(), userEmail: user.email, status: 'Pending'
+            };
+            try {
+                if(docId) await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots', docId), payload, { merge: true });
+                else { payload.createdAt = serverTimestamp(); await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots'), payload); }
+                alert("SRF Submitted Successfully! ✅"); window.location.href = 'dashboard.html';
+            } catch(e) { alert("Error."); btn.disabled = false; }
+        };
+        lucide.createIcons();
+    </script>
+</body>
+</html>
+
