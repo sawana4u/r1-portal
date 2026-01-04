@@ -34,31 +34,31 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- Screen Loader -->
+    <!-- Loading Screen -->
     <div id="pageLoader" class="fixed inset-0 bg-white z-[500] flex flex-col items-center justify-center">
         <div class="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-        <p class="mt-4 text-slate-500 font-bold text-xs uppercase tracking-widest">Master Engine Loading...</p>
+        <p class="mt-4 text-slate-500 font-bold text-xs uppercase tracking-widest italic">Syncing Master Editor...</p>
     </div>
 
-    <!-- Modals (Range & LC) -->
+    <!-- Popup Modals (Range & LC) -->
     <div id="rangeModal" class="modal">
         <div class="bg-white w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl">
-            <div class="flex justify-between items-center mb-6"><h3 class="text-lg font-black uppercase tracking-tight">Instrument Range(s)</h3><button onclick="closeModals()"><i data-lucide="x" class="text-slate-400"></i></button></div>
+            <div class="flex justify-between items-center mb-6"><h3 class="text-lg font-black uppercase tracking-tight text-slate-800">Range Settings</h3><button onclick="closeModals()"><i data-lucide="x" class="text-slate-400"></i></button></div>
             <div id="rangeEntries" class="space-y-3 mb-6 max-h-60 overflow-y-auto custom-scrollbar pr-2"></div>
             <div class="flex gap-3">
-                <button onclick="addRangeRow()" class="flex-grow py-3 border-2 border-dashed border-slate-200 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:border-indigo-600 hover:text-indigo-600 transition-all">+ Add Scale</button>
-                <button onclick="saveRangeData()" class="px-8 py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase">Confirm</button>
+                <button onclick="addRangeRow()" class="flex-grow py-3 border-2 border-dashed border-slate-200 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:border-indigo-600 hover:text-indigo-600 transition-all">+ Add Range</button>
+                <button onclick="saveRangeData()" class="px-8 py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase">Apply</button>
             </div>
         </div>
     </div>
 
     <div id="lcModal" class="modal">
         <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl">
-            <div class="flex justify-between items-center mb-6"><h3 class="text-lg font-black uppercase tracking-tight">Least Count (L.C.)</h3><button onclick="closeModals()"><i data-lucide="x" class="text-slate-400"></i></button></div>
+            <div class="flex justify-between items-center mb-6"><h3 class="text-lg font-black uppercase tracking-tight text-slate-800">Least Count Settings</h3><button onclick="closeModals()"><i data-lucide="x" class="text-slate-400"></i></button></div>
             <div id="lcEntries" class="space-y-3 mb-6 max-h-60 overflow-y-auto custom-scrollbar pr-2"></div>
             <div class="flex gap-3">
                 <button onclick="addLcRow()" class="flex-grow py-3 border-2 border-dashed border-slate-200 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:border-indigo-600 hover:text-indigo-600 transition-all">+ Add Value</button>
-                <button onclick="saveLcData()" class="px-8 py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase">Confirm</button>
+                <button onclick="saveLcData()" class="px-8 py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase">Apply</button>
             </div>
         </div>
     </div>
@@ -66,97 +66,66 @@
     <!-- MAIN HEADER -->
     <header class="bg-white border-b sticky top-0 z-50 shadow-sm">
         <div class="max-w-[1800px] mx-auto">
-            <!-- Row 1: Context & Primary Actions -->
             <div class="flex flex-col lg:flex-row justify-between items-center p-4 gap-4">
                 <div class="flex items-center gap-4">
-                    <button onclick="history.back()" class="p-2.5 bg-slate-100 rounded-xl text-slate-500 hover:bg-slate-200 transition-all">
-                        <i data-lucide="chevron-left" class="w-5 h-5"></i>
-                    </button>
+                    <button onclick="history.back()" class="p-2.5 bg-slate-100 rounded-xl text-slate-500 hover:bg-slate-200 transition-all"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
                     <div>
                         <div class="flex items-center gap-2 mb-0.5">
-                            <span class="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[9px] font-black uppercase rounded-md">Editor v4.1</span>
-                            <h1 class="text-lg font-black uppercase tracking-tighter text-slate-800">Master SRF Entry</h1>
+                            <span class="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[9px] font-black uppercase rounded-md">Master Tool</span>
+                            <h1 class="text-lg font-black uppercase tracking-tighter text-slate-800">SRF Data Entry</h1>
                         </div>
-                        <div id="compDisplay" class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] flex items-center gap-1">
-                            <i data-lucide="building" class="w-3 h-3"></i> Loading Account...
+                        <div id="compDisplay" class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] flex items-center gap-1 italic">
+                             Syncing Account...
                         </div>
                     </div>
                 </div>
 
                 <div class="flex items-center gap-3 w-full lg:w-auto">
-                    <button onclick="addRow()" class="btn-action btn-outline flex-1 lg:flex-none">
-                        <i data-lucide="plus" class="w-4 h-4"></i> Add Instrument
-                    </button>
-                    <button onclick="submitSRF()" id="subBtn" class="btn-action btn-primary px-10 flex-1 lg:flex-none">
-                        <i data-lucide="save" class="w-4 h-4"></i> Final Save Record
-                    </button>
+                    <button onclick="addRow()" class="btn-action btn-outline flex-1 lg:flex-none"><i data-lucide="plus" class="w-4 h-4"></i> Row</button>
+                    <button onclick="submitSRF()" id="subBtn" class="btn-action btn-primary px-10 flex-1 lg:flex-none"><i data-lucide="save" class="w-4 h-4"></i> Save Record</button>
                 </div>
             </div>
 
-            <!-- Row 2: Job Settings & Tools -->
             <div class="bg-slate-50 border-t border-slate-100 px-4 py-3 flex flex-col lg:flex-row justify-between items-center gap-4">
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3 w-full lg:w-auto">
                     <div>
-                        <label class="text-[8px] font-black uppercase text-slate-400 mb-1 block ml-1">Job Category</label>
-                        <select id="jobType" onchange="updateJobNo()" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-bold outline-none focus:border-indigo-500">
-                            <option value="NABL">NABL (Standard)</option>
-                            <option value="NON NABL">NON NABL (Traceable)</option>
+                        <label class="text-[8px] font-black text-slate-400 mb-1 block ml-1 uppercase">Job Category</label>
+                        <select id="jobType" onchange="updateJobNo()" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-bold outline-none">
+                            <option value="NABL">NABL</option>
+                            <option value="NON NABL">NON NABL</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="text-[8px] font-black uppercase text-slate-400 mb-1 block ml-1">Job Date</label>
-                        <input type="date" id="jobDate" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-bold outline-none">
-                    </div>
-                    <div>
-                        <label class="text-[8px] font-black uppercase text-slate-400 mb-1 block ml-1">Receipt Date</label>
-                        <input type="date" id="receiptDate" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-bold outline-none">
-                    </div>
-                    <div>
-                        <label class="text-[8px] font-black uppercase text-slate-400 mb-1 block ml-1">Generated Job No.</label>
-                        <input type="text" id="jobNoDisplay" readonly class="w-full p-2 bg-indigo-50 border border-indigo-100 rounded-lg text-[11px] font-black text-indigo-600 uppercase">
-                    </div>
+                    <div><label class="text-[8px] font-black text-slate-400 mb-1 block ml-1 uppercase">Job Date</label><input type="date" id="jobDate" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-bold"></div>
+                    <div><label class="text-[8px] font-black text-slate-400 mb-1 block ml-1 uppercase">Receipt Date</label><input type="date" id="receiptDate" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-bold"></div>
+                    <div><label class="text-[8px] font-black text-slate-400 mb-1 block ml-1 uppercase">Job Number</label><input type="text" id="jobNoDisplay" readonly class="w-full p-2 bg-indigo-50 border border-indigo-100 rounded-lg text-[11px] font-black text-indigo-600 uppercase"></div>
                 </div>
 
                 <div class="flex items-center gap-2 w-full lg:w-auto border-t lg:border-t-0 pt-3 lg:pt-0">
                     <input type="file" id="excelInput" class="hidden" accept=".xlsx, .xls" onchange="importExcel(event)">
-                    
-                    <!-- ADMIN ONLY: DOWNLOAD SRF AS EXCEL -->
-                    <button onclick="exportSRFToExcel()" class="btn-action btn-admin admin-col hidden">
-                        <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Export SRF
-                    </button>
-
-                    <button onclick="document.getElementById('excelInput').click()" class="btn-action btn-secondary">
-                        <i data-lucide="file-up" class="w-4 h-4"></i> Import
-                    </button>
-                    <button onclick="downloadTemplate()" class="btn-action btn-secondary">
-                        <i data-lucide="download" class="w-4 h-4"></i> Template
-                    </button>
+                    <button onclick="exportSRFToExcel()" class="btn-action btn-admin admin-col hidden"><i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Export</button>
+                    <button onclick="document.getElementById('excelInput').click()" class="btn-action btn-secondary"><i data-lucide="file-up" class="w-4 h-4"></i> Import</button>
+                    <button onclick="downloadTemplate()" class="btn-action btn-secondary"><i data-lucide="download" class="w-4 h-4"></i> Template</button>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Site Information Banner -->
     <section class="bg-slate-900 px-6 py-4 text-white">
         <div class="max-w-[1800px] mx-auto flex flex-col md:flex-row items-center gap-6">
             <div class="w-full md:w-72">
-                <label class="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1.5 block">Delivery Location</label>
+                <label class="text-[9px] font-black uppercase text-slate-500 mb-1.5 block">Target Site</label>
                 <select id="siteSelect" onchange="handleSiteSelect()" class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs font-bold outline-none focus:border-indigo-500 transition-all">
-                    <option value="">-- Choose Target Site --</option>
+                    <option value="">-- Choose From Profile --</option>
                 </select>
             </div>
-            <div id="addressCard" class="flex-grow p-3 bg-white/5 border border-white/10 rounded-xl flex items-center gap-4">
+            <div class="flex-grow p-3 bg-white/5 border border-white/10 rounded-xl flex items-center gap-4">
                 <div class="p-2 bg-indigo-500/20 rounded-lg"><i data-lucide="map-pin" class="w-4 h-4 text-indigo-400"></i></div>
-                <div>
-                    <h4 id="displayLabel" class="text-[11px] font-black text-white uppercase tracking-wider">No Site Selected</h4>
-                    <p id="displayAddress" class="text-[10px] font-medium text-slate-400 italic">Select a registered site to proceed...</p>
-                </div>
-                <span id="savedBadge" class="hidden ml-auto px-2 py-1 bg-emerald-500/20 text-emerald-400 text-[8px] font-black uppercase rounded border border-emerald-500/30">Sync Locked</span>
+                <div><h4 id="displayLabel" class="text-[11px] font-black uppercase">No Site Selected</h4><p id="displayAddress" class="text-[10px] text-slate-400 italic">Select location to enable saving...</p></div>
+                <span id="savedBadge" class="hidden ml-auto px-2 py-1 bg-emerald-500/20 text-emerald-400 text-[8px] font-black uppercase rounded border border-emerald-500/30">Locked</span>
             </div>
         </div>
     </section>
 
-    <!-- Spreadsheet Grid -->
     <main class="flex-grow overflow-auto p-4 custom-scrollbar">
         <div class="bg-white rounded-3xl border shadow-xl overflow-hidden min-w-[2600px]">
             <table class="w-full text-left border-collapse">
@@ -164,18 +133,18 @@
                     <tr>
                         <th class="p-5 sticky-col w-[60px] text-center">Sr.</th>
                         <th class="p-5 w-[250px]">Instrument Name *</th>
-                        <th class="p-5 w-[150px] admin-col hidden">Format (Admin)</th>
+                        <th class="p-5 w-[150px] admin-col hidden text-indigo-300">Format (Admin)</th>
                         <th class="p-5 w-[120px]">Make</th>
                         <th class="p-5 w-[120px]">Model</th>
                         <th class="p-5 w-[150px]">Serial No.</th>
                         <th class="p-5 w-[150px]">ID No. *</th>
                         <th class="p-5 w-[200px]">Range (Pop-up)</th>
-                        <th class="p-5 w-[100px]">Size (Sieves)</th>
+                        <th class="p-5 w-[100px]">Size</th>
                         <th class="p-5 w-[150px]">L.C. (Pop-up)</th>
                         <th class="p-5 w-[120px]">Accuracy</th>
                         <th class="p-5 w-[150px]">Location</th>
                         <th class="p-5 w-[130px]">Cal Date</th>
-                        <th class="p-5 w-[150px] admin-col hidden">Engineer</th>
+                        <th class="p-5 w-[150px] admin-col hidden text-indigo-300">Engineer</th>
                         <th class="p-5 w-[180px] text-center">Actions</th>
                     </tr>
                 </thead>
@@ -189,17 +158,14 @@
         import { onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { collection, setDoc, doc, getDoc, addDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        let user = null, isAdmin = false, gridData = [], docId = null, targetProfile = {}, existingSiteAddr = "";
-        let activeRowIdx = null;
-
+        let user = null, isAdmin = false, gridData = [], docId = null, targetProfile = {}, existingSiteAddr = "", activeRowIdx = null;
         const params = new URLSearchParams(window.location.search);
         docId = params.get('id');
         const cid = params.get('cid');
 
         onAuthStateChanged(auth, async u => {
             if(!u) { await signInAnonymously(auth); return; }
-            user = u;
-            isAdmin = u.email && u.email.startsWith('admin');
+            user = u; isAdmin = u.email && u.email.startsWith('admin');
             if(isAdmin) document.querySelectorAll('.admin-col').forEach(el => el.classList.remove('hidden'));
             const targetId = cid || (isAdmin && docId ? null : u.uid);
             if(targetId) await fetchProfile(targetId);
@@ -211,27 +177,16 @@
 
         async function fetchProfile(id) {
             const snap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'customers', id));
-            if(snap.exists()) {
-                targetProfile = snap.data();
-                document.getElementById('compDisplay').innerHTML = `<i data-lucide="building" class="w-3 h-3"></i> Account: ${targetProfile.companyName}`;
-                fillSites();
-                lucide.createIcons();
-            }
+            if(snap.exists()) { targetProfile = snap.data(); document.getElementById('compDisplay').innerText = `Account: ${targetProfile.companyName}`; fillSites(); }
         }
 
         async function fetchLotAndProfile(id) {
             const snap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots', id));
             if(snap.exists()) {
-                const data = snap.data();
-                existingSiteAddr = data.endCustomerAddress;
+                const data = snap.data(); existingSiteAddr = data.endCustomerAddress;
                 const cSnap = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'customers'));
                 const client = cSnap.docs.find(d => d.data().companyName === data.companyName);
-                if(client) {
-                    targetProfile = client.data();
-                    document.getElementById('compDisplay').innerHTML = `<i data-lucide="building" class="w-3 h-3"></i> Account: ${targetProfile.companyName}`;
-                    fillSites();
-                    lucide.createIcons();
-                }
+                if(client) { targetProfile = client.data(); document.getElementById('compDisplay').innerText = `Account: ${targetProfile.companyName}`; fillSites(); }
             }
         }
 
@@ -246,220 +201,139 @@
                 });
             }
             if(existingSiteAddr) {
-                for(let i=0; i<select.options.length; i++){
-                    if(select.options[i].dataset.addr === existingSiteAddr) { select.selectedIndex = i; handleSiteSelect(true); break; }
-                }
+                for(let i=0; i<select.options.length; i++) if(select.options[i].dataset.addr === existingSiteAddr) { select.selectedIndex = i; handleSiteSelect(true); break; }
             }
         }
 
-        window.handleSiteSelect = (isExisting = false) => {
-            const select = document.getElementById('siteSelect');
-            const opt = select.options[select.selectedIndex];
-            document.getElementById('displayAddress').innerText = opt.value !== "" ? opt.dataset.addr : "Please select a location...";
+        window.handleSiteSelect = (isEx = false) => {
+            const opt = document.getElementById('siteSelect').options[document.getElementById('siteSelect').selectedIndex];
+            document.getElementById('displayAddress').innerText = opt.value !== "" ? opt.dataset.addr : "Select location...";
             document.getElementById('displayLabel').innerText = opt.value !== "" ? opt.text : "No Site Selected";
-            if(isExisting) document.getElementById('savedBadge').classList.remove('hidden');
+            if(isEx) document.getElementById('savedBadge').classList.remove('hidden');
         }
 
         window.updateJobNo = async () => {
             const type = document.getElementById('jobType').value;
-            const now = new Date();
-            const yy = now.getFullYear().toString().slice(-2);
-            const mm = (now.getMonth() + 1).toString().padStart(2, '0');
-            const prefix = `R1/${yy}${mm}/`;
+            const now = new Date(), yy = now.getFullYear().toString().slice(-2), mm = (now.getMonth() + 1).toString().padStart(2, '0');
             const code = type === 'NABL' ? 'C' : 'NC';
             const snap = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots'));
             const count = snap.docs.filter(d => d.data().jobType === type).length + 1;
-            document.getElementById('jobNoDisplay').value = `${prefix}${code}${count.toString().padStart(3, '0')}`;
+            document.getElementById('jobNoDisplay').value = `R1/${yy}${mm}/${code}${count.toString().padStart(3, '0')}`;
         };
 
-        async function setupNewSRF() {
-            document.getElementById('jobDate').valueAsDate = new Date();
-            document.getElementById('receiptDate').valueAsDate = new Date();
-            await updateJobNo();
-            gridData = [createBlankRow()];
-            render();
-        }
+        async function setupNewSRF() { document.getElementById('jobDate').valueAsDate = new Date(); document.getElementById('receiptDate').valueAsDate = new Date(); await updateJobNo(); gridData = [createBlankRow()]; render(); }
 
         async function loadLot(id) {
             const snap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots', id));
-            if(snap.exists()) {
-                const d = snap.data();
-                document.getElementById('jobType').value = d.jobType || 'NABL';
-                document.getElementById('jobDate').value = d.jobDate || '';
-                document.getElementById('receiptDate').value = d.receiptDate || '';
-                document.getElementById('jobNoDisplay').value = d.srfId || '';
-                gridData = d.items || [];
-                render();
-            }
+            if(snap.exists()) { const d = snap.data(); document.getElementById('jobType').value = d.jobType; document.getElementById('jobDate').value = d.jobDate; document.getElementById('receiptDate').value = d.receiptDate; document.getElementById('jobNoDisplay').value = d.srfId; gridData = d.items || []; render(); }
         }
 
-        function createBlankRow() {
-            return { name: '', format: '', make: '', model: '', srNo: '', idNo: '', ranges: [], sizes: '', lcs: [], accuracy: '', location: '', calDate: '', engineer: '' };
-        }
+        function createBlankRow() { return { name: '', format: '', make: '', model: '', srNo: '', idNo: '', ranges: [], sizes: '', lcs: [], accuracy: '', location: '', calDate: '', engineer: '' }; }
 
-        // --- EXCEL LOGIC ---
+        // --- SMART EXCEL EXPORT ---
         window.exportSRFToExcel = () => {
-            if(!gridData.length) return alert("No data to export!");
-            
+            if(!gridData.length) return alert("No data!");
             const jobNo = document.getElementById('jobNoDisplay').value;
-            const jobType = document.getElementById('jobType').value;
-            const client = targetProfile.companyName || 'Unknown_Client';
+            
+            const excelRows = gridData.map((r, i) => ({
+                "Sr.": i + 1,
+                "Instrument Name": r.name,
+                "Format": r.format,
+                "Make": r.make,
+                "Model": r.model,
+                "Serial No": r.srNo,
+                "ID No": r.idNo,
+                "Range": r.ranges?.map(x => `${x.min} to ${x.max} ${x.unit}`).join(' ; ') || '',
+                "Size": r.sizes,
+                "L.C.": r.lcs?.map(x => `${x.val} ${x.unit}`).join(' ; ') || '',
+                "Accuracy": r.accuracy,
+                "Location": r.location,
+                "Cal Date": r.calDate,
+                "Engineer": r.engineer
+            }));
 
-            // Prepare Data for Excel
-            const excelRows = gridData.map((r, i) => {
-                // Flatten Ranges to string
-                const rangeStr = r.ranges?.map(x => `${x.min} to ${x.max} ${x.unit}`).join(', ') || '';
-                // Flatten LCs to string
-                const lcStr = r.lcs?.map(x => `${x.val} ${x.unit}`).join(', ') || '';
-
-                return {
-                    "Sr. No.": i + 1,
-                    "Instrument Name": r.name,
-                    "Format": r.format,
-                    "Make": r.make,
-                    "Model": r.model,
-                    "Serial No.": r.srNo,
-                    "ID No.": r.idNo,
-                    "Range": rangeStr,
-                    "Size": r.sizes,
-                    "L.C.": lcStr,
-                    "Accuracy": r.accuracy,
-                    "Location": r.location,
-                    "Cal Date": r.calDate,
-                    "Engineer": r.engineer
-                };
-            });
-
-            // Add Header Info row at the top
-            const finalData = [
-                { "Sr. No.": "JOB NO:", "Instrument Name": jobNo, "Format": "TYPE:", "Make": jobType, "Model": "CLIENT:", "Serial No.": client },
-                {}, // Empty row
-                ...excelRows
-            ];
-
-            const ws = XLSX.utils.json_to_sheet(finalData);
+            const ws = XLSX.utils.json_to_sheet(excelRows);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "SRF_DATA");
-            XLSX.writeFile(wb, `SRF_${jobNo.replace(/\//g, '-')}.xlsx`);
+            XLSX.utils.book_append_sheet(wb, ws, "SRF");
+            XLSX.writeFile(wb, `SRF_${jobNo.replace(/\//g,'_')}.xlsx`);
         };
 
         window.downloadTemplate = () => {
-            const headers = [["Instrument Name", "Make", "Model", "Serial No", "ID No", "Range", "Size", "LC", "Accuracy", "Location", "Cal Date"]];
-            const ws = XLSX.utils.aoa_to_sheet(headers);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "SRF_Template");
+            const ws = XLSX.utils.aoa_to_sheet([["Instrument Name", "Make", "Model", "Serial No", "ID No", "Range", "Size", "L.C.", "Accuracy", "Location", "Cal Date"]]);
+            const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Template");
             XLSX.writeFile(wb, "R1_SRF_Template.xlsx");
         };
 
+        // --- SMART EXCEL IMPORT ---
         window.importExcel = (e) => {
             const file = e.target.files[0];
             const reader = new FileReader();
             reader.onload = (evt) => {
                 const wb = XLSX.read(evt.target.result, { type: 'binary' });
                 const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-                gridData = rows.map(r => ({
-                    name: r['Instrument Name'] || '', format: '', make: r['Make'] || '', model: r['Model'] || '',
-                    srNo: r['Serial No'] || '', idNo: r['ID No'] || '', ranges: r['Range'] ? [{min: r['Range'], max:'', unit:''}] : [],
-                    sizes: r['Size'] || '', lcs: r['LC'] ? [{val: r['LC'], unit:''}] : [], accuracy: r['Accuracy'] || '',
-                    location: r['Location'] || '', calDate: r['Cal Date'] || '', engineer: ''
-                }));
+                gridData = rows.map(r => {
+                    // Smart Parsing Logic for Range
+                    const rangeStr = (r['Range'] || '').toString();
+                    const rangeParts = rangeStr.split(';').map(p => {
+                        const clean = p.trim();
+                        if(!clean) return null;
+                        const match = clean.match(/([\d.]+)\s*(?:to|-)\s*([\d.]+)\s*(.*)/i);
+                        if(match) return { min: match[1], max: match[2], unit: match[3].trim() };
+                        return { min: '', max: clean, unit: '' }; // Fallback
+                    }).filter(x => x);
+
+                    // Smart Parsing Logic for L.C.
+                    const lcStr = (r['L.C.'] || r['LC'] || '').toString();
+                    const lcParts = lcStr.split(';').map(p => {
+                        const clean = p.trim();
+                        if(!clean) return null;
+                        const match = clean.match(/([\d.]+)\s*(.*)/i);
+                        if(match) return { val: match[1], unit: match[2].trim() };
+                        return { val: clean, unit: '' };
+                    }).filter(x => x);
+
+                    return {
+                        name: r['Instrument Name'] || '', format: '', make: r['Make'] || '', model: r['Model'] || '',
+                        srNo: r['Serial No'] || r['Serial No.'] || '', idNo: r['ID No'] || r['ID No.'] || '',
+                        ranges: rangeParts, sizes: r['Size'] || '', lcs: lcParts, accuracy: r['Accuracy'] || '',
+                        location: r['Location'] || '', calDate: r['Cal Date'] || '', engineer: ''
+                    };
+                });
                 render();
+                alert(`Imported ${gridData.length} instruments successfully!`);
             };
             reader.readAsBinaryString(file);
         };
 
-        // --- POPUP LOGIC ---
-        window.openRangePopup = (idx) => {
-            activeRowIdx = idx;
-            const container = document.getElementById('rangeEntries');
-            container.innerHTML = '';
-            const existing = gridData[idx].ranges || [];
-            if(existing.length === 0) existing.push({min:'', max:'', unit:''});
-            existing.forEach(r => addRangeRow(r));
-            document.getElementById('rangeModal').classList.add('active');
-        };
-
-        window.addRangeRow = (data = null) => {
-            const div = document.createElement('div');
-            div.className = "flex gap-2 items-center mb-2";
-            div.innerHTML = `
-                <input type="text" placeholder="Min" class="grid-input w-20 range-min" value="${data?.min||''}">
-                <span class="text-[10px] font-bold text-slate-300">to</span>
-                <input type="text" placeholder="Max" class="grid-input w-20 range-max" value="${data?.max||''}">
-                <input type="text" placeholder="Unit" class="grid-input w-24 range-unit" value="${data?.unit||''}">
-                <button onclick="this.parentElement.remove()" class="text-red-300 hover:text-red-500 p-1"><i data-lucide="minus-circle" class="w-4 h-4"></i></button>
-            `;
-            document.getElementById('rangeEntries').appendChild(div);
-            lucide.createIcons();
-        };
-
-        window.saveRangeData = () => {
-            const entries = document.querySelectorAll('#rangeEntries > div');
-            gridData[activeRowIdx].ranges = Array.from(entries).map(div => ({
-                min: div.querySelector('.range-min').value, max: div.querySelector('.range-max').value, unit: div.querySelector('.range-unit').value
-            })).filter(r => r.min || r.max);
-            closeModals(); render();
-        };
-
-        window.openLcPopup = (idx) => {
-            activeRowIdx = idx;
-            const container = document.getElementById('lcEntries');
-            container.innerHTML = '';
-            const existing = gridData[idx].lcs || [];
-            if(existing.length === 0) existing.push({val:'', unit:''});
-            existing.forEach(l => addLcRow(l));
-            document.getElementById('lcModal').classList.add('active');
-        };
-
-        window.addLcRow = (data = null) => {
-            const div = document.createElement('div');
-            div.className = "flex gap-2 items-center mb-2";
-            div.innerHTML = `
-                <input type="text" placeholder="Value" class="grid-input lc-val" value="${data?.val||''}">
-                <input type="text" placeholder="Unit" class="grid-input w-32 lc-unit" value="${data?.unit||''}">
-                <button onclick="this.parentElement.remove()" class="text-red-300 hover:text-red-500 p-1"><i data-lucide="minus-circle" class="w-4 h-4"></i></button>
-            `;
-            document.getElementById('lcEntries').appendChild(div);
-            lucide.createIcons();
-        };
-
-        window.saveLcData = () => {
-            const entries = document.querySelectorAll('#lcEntries > div');
-            gridData[activeRowIdx].lcs = Array.from(entries).map(div => ({
-                val: div.querySelector('.lc-val').value, unit: div.querySelector('.lc-unit').value
-            })).filter(l => l.val);
-            closeModals(); render();
-        };
-
+        // --- POPUP ENGINE ---
+        window.openRangePopup = (idx) => { activeRowIdx = idx; const container = document.getElementById('rangeEntries'); container.innerHTML = ''; (gridData[idx].ranges?.length ? gridData[idx].ranges : [{min:'', max:'', unit:''}]).forEach(r => addRangeRow(r)); document.getElementById('rangeModal').classList.add('active'); };
+        window.addRangeRow = (d = null) => { const div = document.createElement('div'); div.className = "flex gap-2 items-center mb-2"; div.innerHTML = `<input type="text" placeholder="Min" class="grid-input w-20 r-min" value="${d?.min||''}"> <span class="text-[10px] font-bold text-slate-300">to</span> <input type="text" placeholder="Max" class="grid-input w-20 r-max" value="${d?.max||''}"> <input type="text" placeholder="Unit" class="grid-input w-24 r-unit" value="${d?.unit||''}"> <button onclick="this.parentElement.remove()" class="text-red-300 hover:text-red-500"><i data-lucide="minus-circle" class="w-4 h-4"></i></button>`; document.getElementById('rangeEntries').appendChild(div); lucide.createIcons(); };
+        window.saveRangeData = () => { gridData[activeRowIdx].ranges = Array.from(document.querySelectorAll('#rangeEntries > div')).map(div => ({ min: div.querySelector('.r-min').value, max: div.querySelector('.r-max').value, unit: div.querySelector('.r-unit').value })).filter(r => r.max); closeModals(); render(); };
+        window.openLcPopup = (idx) => { activeRowIdx = idx; const container = document.getElementById('lcEntries'); container.innerHTML = ''; (gridData[idx].lcs?.length ? gridData[idx].lcs : [{val:'', unit:''}]).forEach(l => addLcRow(l)); document.getElementById('lcModal').classList.add('active'); };
+        window.addLcRow = (d = null) => { const div = document.createElement('div'); div.className = "flex gap-2 items-center mb-2"; div.innerHTML = `<input type="text" placeholder="Val" class="grid-input l-val" value="${d?.val||''}"> <input type="text" placeholder="Unit" class="grid-input w-24 l-unit" value="${d?.unit||''}"> <button onclick="this.parentElement.remove()" class="text-red-300 hover:text-red-500"><i data-lucide="minus-circle" class="w-4 h-4"></i></button>`; document.getElementById('lcEntries').appendChild(div); lucide.createIcons(); };
+        window.saveLcData = () => { gridData[activeRowIdx].lcs = Array.from(document.querySelectorAll('#lcEntries > div')).map(div => ({ val: div.querySelector('.l-val').value, unit: div.querySelector('.l-unit').value })).filter(l => l.val); closeModals(); render(); };
         window.closeModals = () => { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); activeRowIdx = null; };
 
-        // --- GRID CORE ---
+        // --- GRID RENDERING ---
         window.addRow = () => { gridData.push(createBlankRow()); render(); };
-        window.duplicateRow = (i) => { gridData.splice(i + 1, 0, JSON.parse(JSON.stringify(gridData[i]))); render(); };
-        window.moveRow = (i, d) => {
-            const t = i + d; if(t < 0 || t >= gridData.length) return;
-            const temp = gridData[i]; gridData[i] = gridData[t]; gridData[t] = temp; render();
-        };
+        window.duplicateRow = (i) => { gridData.splice(i+1, 0, JSON.parse(JSON.stringify(gridData[i]))); render(); };
+        window.moveRow = (i, d) => { const t = i + d; if(t >= 0 && t < gridData.length) { [gridData[i], gridData[t]] = [gridData[t], gridData[i]]; render(); } };
         window.del = (i) => { if(confirm("Remove?")) { gridData.splice(i,1); render(); } };
         window.upd = (i, k, v) => { gridData[i][k] = v; };
 
         function render() {
-            const body = document.getElementById('gridBody');
-            body.innerHTML = gridData.map((r, i) => {
-                const rSum = r.ranges?.length > 0 ? r.ranges.map(x => `${x.min}-${x.max}${x.unit}`).join(', ') : 'Set Range';
-                const lSum = r.lcs?.length > 0 ? r.lcs.map(x => `${x.val}${x.unit}`).join(', ') : 'Set L.C.';
-                return `
+            document.getElementById('gridBody').innerHTML = gridData.map((r, i) => `
                 <tr class="hover:bg-slate-50 transition-all border-b group">
-                    <td class="p-4 sticky-col text-center font-bold text-slate-300 text-[11px]">${i + 1}</td>
+                    <td class="p-4 sticky-col text-center font-bold text-slate-300 text-[11px]">${i+1}</td>
                     <td class="p-2"><input type="text" class="grid-input font-bold" value="${r.name||''}" oninput="upd(${i},'name',this.value)"></td>
                     <td class="p-2 admin-col ${isAdmin?'':'hidden'}"><input type="text" class="grid-input bg-indigo-50/50" value="${r.format||''}" oninput="upd(${i},'format',this.value)"></td>
                     <td class="p-2"><input type="text" class="grid-input" value="${r.make||''}" oninput="upd(${i},'make',this.value)"></td>
                     <td class="p-2"><input type="text" class="grid-input" value="${r.model||''}" oninput="upd(${i},'model',this.value)"></td>
                     <td class="p-2"><input type="text" class="grid-input" value="${r.srNo||''}" oninput="upd(${i},'srNo',this.value)"></td>
                     <td class="p-2"><input type="text" class="grid-input text-indigo-600 font-bold" value="${r.idNo||''}" oninput="upd(${i},'idNo',this.value)"></td>
-                    <td class="p-2"><div onclick="openRangePopup(${i})" class="cell-popup-trigger truncate">${rSum}</div></td>
+                    <td class="p-2"><div onclick="openRangePopup(${i})" class="cell-popup-trigger truncate">${r.ranges?.map(x=>`${x.min}-${x.max}${x.unit}`).join(', ')||'Set Range'}</div></td>
                     <td class="p-2"><input type="text" class="grid-input" value="${r.sizes||''}" oninput="upd(${i},'sizes',this.value)"></td>
-                    <td class="p-2"><div onclick="openLcPopup(${i})" class="cell-popup-trigger truncate">${lSum}</div></td>
+                    <td class="p-2"><div onclick="openLcPopup(${i})" class="cell-popup-trigger truncate">${r.lcs?.map(x=>`${x.val}${x.unit}`).join(', ')||'Set LC'}</div></td>
                     <td class="p-2"><input type="text" class="grid-input" value="${r.accuracy||''}" oninput="upd(${i},'accuracy',this.value)"></td>
                     <td class="p-2"><input type="text" class="grid-input" value="${r.location||''}" oninput="upd(${i},'location',this.value)"></td>
                     <td class="p-2"><input type="date" class="grid-input" value="${r.calDate||''}" oninput="upd(${i},'calDate',this.value)"></td>
@@ -470,27 +344,24 @@
                         <button onclick="duplicateRow(${i})" class="control-btn"><i data-lucide="copy" class="w-4 h-4"></i></button>
                         <button onclick="del(${i})" class="control-btn hover:text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </div></td>
-                </tr>`;
-            }).join('');
+                </tr>`).join('');
             lucide.createIcons();
         }
 
         window.submitSRF = async () => {
-            const btn = document.getElementById('subBtn');
-            const siteOpt = document.getElementById('siteSelect').options[document.getElementById('siteSelect').selectedIndex];
-            if(!siteOpt.value) return alert("Select site!");
-            btn.disabled = true; btn.innerText = "Saving...";
+            const btn = document.getElementById('subBtn'); const site = document.getElementById('siteSelect').options[document.getElementById('siteSelect').selectedIndex];
+            if(!site.value) return alert("Select site!"); btn.disabled = true; btn.innerText = "Syncing...";
             const payload = {
                 srfId: document.getElementById('jobNoDisplay').value, jobType: document.getElementById('jobType').value,
                 jobDate: document.getElementById('jobDate').value, receiptDate: document.getElementById('receiptDate').value,
-                companyName: targetProfile.companyName, endCustomerAddress: siteOpt.dataset.addr, locationLabel: siteOpt.text,
+                companyName: targetProfile.companyName, endCustomerAddress: site.dataset.addr, locationLabel: site.text,
                 items: gridData, total: gridData.length, updatedAt: serverTimestamp(), userEmail: isAdmin ? 'admin' : user.email
             };
             try {
                 if(docId) await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots', docId), payload, { merge: true });
                 else { payload.createdAt = serverTimestamp(); await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'srf_lots'), payload); }
-                alert("Master SRF Record Saved! ✅"); window.location.href = isAdmin ? 'admin.html' : 'dashboard.html';
-            } catch(e) { alert("Save Error."); btn.disabled = false; }
+                alert("Saved! ✅"); window.location.href = isAdmin ? 'admin.html' : 'dashboard.html';
+            } catch(e) { alert("Error."); btn.disabled = false; }
         };
         lucide.createIcons();
     </script>
