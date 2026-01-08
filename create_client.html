@@ -3,218 +3,315 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register Client | R1 Tech Labs</title>
+    <title>Business Profile | R1 Tech Labs</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
         body { font-family: 'Outfit', sans-serif; background-color: #f8fafc; color: #1e293b; }
-        .input-field { width: 100%; padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-weight: 600; outline: none; transition: all 0.2s; font-size: 14px; }
-        .input-field:focus { border-color: #4f46e5; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
-        .site-card { background: #fff; border: 1.5px solid #f1f5f9; border-radius: 16px; padding: 16px; margin-bottom: 12px; transition: all 0.2s; }
-        .site-card:hover { border-color: #e2e8f0; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
-        .btn-primary { background: #4f46e5; color: #fff; padding: 14px 28px; border-radius: 14px; font-weight: 800; text-transform: uppercase; font-size: 12px; letter-spacing: 0.05em; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn-primary:hover { background: #4338ca; transform: translateY(-1px); box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.2); }
-        .btn-secondary { background: #f1f5f9; color: #64748b; padding: 10px 20px; border-radius: 10px; font-weight: 700; font-size: 11px; text-transform: uppercase; transition: all 0.2s; }
-        .btn-secondary:hover { background: #e2e8f0; color: #1e293b; }
+        .form-input { width: 100%; padding: 0.65rem 1rem; background-color: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 0.75rem; outline: none; transition: all 0.2s; font-size: 0.875rem; font-weight: 600; }
+        .form-input:focus { border-color: #4f46e5; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.05); }
+        .form-input:disabled { background-color: #f1f5f9; color: #94a3b8; cursor: not-allowed; border-style: dashed; }
+        .label-text { font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.1em; margin-bottom: 0.4rem; display: block; }
         
-        #messageBox { display: none; position: fixed; top: 24px; right: 24px; z-index: 1000; padding: 16px 24px; border-radius: 16px; animation: slideIn 0.3s ease-out; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .site-row { border-bottom: 1px solid #f1f5f9; transition: all 0.2s; }
+        .site-row:hover { background-color: #fcfdfe; }
+        .site-details { display: none; background-color: #f8faff; border-radius: 1rem; margin: 0.5rem; padding: 1.5rem; border: 1px solid #eef2ff; }
+        .site-row.expanded .site-details { display: block; }
+        .site-row.expanded { background-color: #ffffff; border-left: 4px solid #4f46e5; }
     </style>
 </head>
-<body class="min-h-screen p-4 md:p-8">
+<body class="min-h-screen flex flex-col">
 
-    <div id="messageBox"></div>
+    <!-- Global Loader -->
+    <div id="pageLoader" class="fixed inset-0 bg-white z-[500] flex flex-col items-center justify-center">
+        <div class="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+        <p class="mt-4 text-slate-500 font-bold text-[10px] uppercase tracking-[0.2em]">Syncing Business Data...</p>
+    </div>
 
-    <div class="max-w-4xl mx-auto">
-        <!-- Header -->
-        <div class="flex items-center justify-between mb-10">
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 p-6 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <button onclick="window.location.href='admin.html'" class="p-3 bg-white border border-slate-200 rounded-2xl text-slate-400 hover:text-indigo-600 transition-all">
+                <button onclick="goBack()" class="p-2.5 bg-slate-50 rounded-xl hover:bg-slate-100 transition-all text-slate-500">
                     <i data-lucide="chevron-left" class="w-6 h-6"></i>
                 </button>
                 <div>
-                    <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tighter">Register New Client</h1>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] italic">R1 Tech Labs Directory</p>
+                    <h1 id="pageTitle" class="text-xl font-black uppercase tracking-tighter text-indigo-600">Company Profile</h1>
+                    <p id="pageDesc" class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Business Identity Management</p>
                 </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <div id="statusBadge" class="hidden text-[10px] font-black text-emerald-500 uppercase bg-emerald-50 px-4 py-2 rounded-full border border-emerald-100 flex items-center gap-2">
+                    <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div> Profile Synced
+                </div>
+                <!-- Reset Button -->
+                <button onclick="resetForm()" class="p-2.5 bg-slate-50 text-slate-400 hover:text-red-500 rounded-xl transition-all" title="Clear All Fields">
+                    <i data-lucide="refresh-ccw" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-6xl mx-auto w-full p-6 py-12">
+        
+        <!-- Company Name -->
+        <div class="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm mb-8">
+            <label class="label-text">Official Company Name *</label>
+            <input type="text" id="compName" class="form-input text-lg py-4 border-2" placeholder="e.g. Acme Corporation">
+        </div>
+
+        <!-- Site List -->
+        <div class="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <div>
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">Registered Sites</h3>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">List of all physical locations</p>
+                </div>
+                <button onclick="addSiteRow()" class="flex items-center gap-2 text-[10px] font-black uppercase text-white bg-indigo-600 px-5 py-2.5 rounded-xl hover:bg-indigo-700 shadow-lg transition-all">
+                    <i data-lucide="plus" class="w-4 h-4"></i> Add New Site
+                </button>
+            </div>
+
+            <div class="grid grid-cols-12 gap-4 px-6 py-3 bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 hidden md:grid">
+                <div class="col-span-1">No.</div>
+                <div class="col-span-5">Site Address</div>
+                <div class="col-span-4">Contact Person</div>
+                <div class="col-span-2 text-right">Actions</div>
+            </div>
+
+            <div id="sitesContainer" class="divide-y divide-slate-50"></div>
+
+            <div id="emptyHint" class="hidden py-16 text-center">
+                <i data-lucide="map-pin" class="text-slate-200 w-12 h-12 mx-auto mb-4"></i>
+                <p class="text-xs font-bold text-slate-300 uppercase tracking-widest">No sites found.</p>
             </div>
         </div>
 
-        <form id="clientForm" class="space-y-8">
-            <!-- Basic Info Section -->
-            <div class="bg-white rounded-[2.5rem] p-8 border shadow-sm">
-                <div class="flex items-center gap-3 mb-6">
-                    <div class="w-8 h-8 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center"><i data-lucide="building-2" class="w-4 h-4"></i></div>
-                    <h3 class="text-sm font-black uppercase text-slate-800 tracking-wider">Business Identity</h3>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="space-y-2">
-                        <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Company Full Name *</label>
-                        <input type="text" id="companyName" required class="input-field" placeholder="e.g. Reliance Industries Ltd.">
-                    </div>
-                    <div class="space-y-2">
-                        <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Registered Email *</label>
-                        <input type="email" id="userEmail" required class="input-field" placeholder="client@company.com">
-                    </div>
-                    <div class="md:col-span-2 space-y-2">
-                        <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Head Office Address</label>
-                        <textarea id="mainAddress" rows="2" class="input-field" placeholder="Complete registered office address..."></textarea>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sites Section -->
-            <div class="bg-slate-50 rounded-[2.5rem] p-8 border border-dashed border-slate-200">
-                <div class="flex items-center justify-between mb-6">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center"><i data-lucide="map-pin" class="w-4 h-4"></i></div>
-                        <h3 class="text-sm font-black uppercase text-slate-800 tracking-wider">Service Sites / Delivery Locations</h3>
-                    </div>
-                    <button type="button" onclick="addNewSite()" class="btn-secondary flex items-center gap-2">
-                        <i data-lucide="plus" class="w-4 h-4"></i> Add Site
-                    </button>
-                </div>
-
-                <div id="sitesContainer" class="space-y-4">
-                    <!-- Site cards will be injected here -->
-                </div>
-                
-                <div id="noSitesHint" class="text-center py-10 text-slate-300">
-                    <i data-lucide="layout-grid" class="w-12 h-12 mx-auto mb-4 opacity-20"></i>
-                    <p class="text-xs font-bold uppercase tracking-widest">No sites added yet</p>
-                </div>
-            </div>
-
-            <!-- Submit Button -->
-            <div class="flex justify-end pt-4">
-                <button type="submit" id="saveBtn" class="btn-primary min-w-[240px]">
-                    <i data-lucide="user-plus" class="w-5 h-5"></i> Create Business Account
-                </button>
-            </div>
-        </form>
-    </div>
+        <div class="mt-10 mb-24">
+            <button onclick="saveProfile()" id="saveBtn" class="w-full bg-indigo-600 text-white font-black py-5 rounded-[1.5rem] uppercase text-xs tracking-widest shadow-2xl hover:bg-indigo-700 transition-all flex items-center justify-center gap-3">
+                <i data-lucide="save" class="w-5 h-5"></i> <span id="btnText">Save Profile Information</span>
+            </button>
+        </div>
+    </main>
 
     <script type="module">
         import { auth, db, APP_ID } from './config.js';
-        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { collection, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        let user = null;
-        let siteList = [];
+        const params = new URLSearchParams(window.location.search);
+        const cid = params.get('cid'); 
+        let userUid = "";
+        let isAdmin = false;
 
-        onAuthStateChanged(auth, u => {
-            if (!u || !u.email.startsWith('admin')) window.location.href = 'index.html';
-            user = u;
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) { await signInAnonymously(auth); return; }
+            userUid = user.uid;
+            isAdmin = user.email && user.email.startsWith('admin');
+            await initPage();
         });
 
-        // Site management
-        window.addNewSite = () => {
-            const id = Date.now();
-            siteList.push({ id, siteAddress: "" });
-            renderSites();
+        async function initPage() {
+            const targetId = cid || userUid;
+            if (cid) {
+                document.getElementById('pageTitle').innerText = "Edit Client Profile";
+                document.getElementById('pageDesc').innerText = "Admin Directory Control";
+            }
+            try {
+                await loadData(targetId);
+            } catch (err) {
+                console.error("Data Load Error:", err);
+            } finally {
+                document.getElementById('pageLoader').style.display = 'none';
+            }
+        }
+
+        async function loadData(targetId) {
+            const paths = [
+                doc(db, 'artifacts', APP_ID, 'public', 'data', 'customers', targetId),
+                doc(db, 'artifacts', APP_ID, 'users', targetId, 'settings', 'profile'),
+                doc(db, 'artifacts', APP_ID, 'users', targetId, 'profile', 'business_data')
+            ];
+            let finalData = null;
+            for (const p of paths) {
+                const snap = await getDoc(p);
+                if (snap.exists()) { finalData = snap.data(); break; }
+            }
+            if (finalData) {
+                document.getElementById('compName').value = finalData.companyName || "";
+                document.getElementById('statusBadge').classList.remove('hidden');
+                document.getElementById('btnText').innerText = "Update Registered Profile";
+                if (finalData.allSites && finalData.allSites.length > 0) {
+                    finalData.allSites.forEach(s => addSiteRow(s));
+                } else { addSiteRow(); }
+            } else { addSiteRow(); }
+        }
+
+        // --- RESET LOGIC ---
+        window.resetForm = () => {
+            if(!confirm("Are you sure? This will clear all entered data.")) return;
+            document.getElementById('compName').value = "";
+            document.getElementById('sitesContainer').innerHTML = "";
+            document.getElementById('statusBadge').classList.add('hidden');
+            document.getElementById('btnText').innerText = "Save Profile Information";
+            addSiteRow(); // Fresh start with 1 row
         };
 
-        window.removeSite = (id) => {
-            siteList = siteList.filter(s => s.id !== id);
-            renderSites();
-        };
-
-        window.updateSiteAddr = (id, val) => {
-            const site = siteList.find(s => s.id === id);
-            if (site) site.siteAddress = val;
-        };
-
-        function renderSites() {
+        window.addSiteRow = (data = null) => {
+            document.getElementById('emptyHint').classList.add('hidden');
             const container = document.getElementById('sitesContainer');
-            const hint = document.getElementById('noSitesHint');
-            
-            hint.style.display = siteList.length ? 'none' : 'block';
-            container.innerHTML = siteList.map((site, index) => `
-                <div class="site-card group animate-in fade-in slide-in-from-bottom-2">
-                    <div class="flex justify-between items-center mb-3">
-                        <span class="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Location #${index + 1}</span>
-                        <button type="button" onclick="removeSite(${site.id})" class="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all">
+            const rowId = 'site_' + Math.random().toString(36).substr(2, 9);
+            const div = document.createElement('div');
+            div.id = rowId;
+            div.className = "site-row";
+            div.innerHTML = `
+                <div class="grid grid-cols-12 gap-4 px-6 py-4 items-center cursor-pointer" onclick="toggleExpand('${rowId}')">
+                    <div class="col-span-1 text-[10px] font-black text-slate-300 sr-num">01</div>
+                    <div class="col-span-11 md:col-span-5">
+                        <p class="text-xs font-bold text-slate-700 truncate summary-addr">${data?.siteAddress || 'New Site Location...'}</p>
+                    </div>
+                    <div class="col-span-8 md:col-span-4 hidden md:block">
+                        <p class="text-[10px] font-black text-slate-400 uppercase summary-name">${data?.contactName || 'Pending Contact'}</p>
+                    </div>
+                    <div class="col-span-4 md:col-span-2 text-right flex justify-end gap-2">
+                        <button class="p-2 text-slate-300 hover:text-indigo-600 transition-colors">
+                            <i data-lucide="chevron-down" class="w-4 h-4 expand-icon"></i>
+                        </button>
+                        <button onclick="event.stopPropagation(); removeSiteRow('${rowId}')" class="p-2 text-slate-200 hover:text-red-500 transition-colors">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                         </button>
                     </div>
-                    <textarea 
-                        oninput="updateSiteAddr(${site.id}, this.value)" 
-                        class="input-field bg-slate-50 border-transparent focus:bg-white" 
-                        placeholder="Enter full site/plant address..."
-                        rows="2"
-                    >${site.siteAddress}</textarea>
                 </div>
-            `).join('');
+                <div class="site-details shadow-inner">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="md:col-span-1">
+                            <span class="label-text">A. Physical Site Address *</span>
+                            <textarea class="form-input h-20 resize-none site-addr" oninput="updateSummary('${rowId}')">${data?.siteAddress || ""}</textarea>
+                        </div>
+                        <div class="md:col-span-1">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="label-text mb-0">B. Billing Address</span>
+                                <label class="flex items-center gap-1 cursor-pointer">
+                                    <input type="checkbox" onchange="toggleSync('${rowId}')" class="sync-check w-3 h-3 accent-indigo-600">
+                                    <span class="text-[8px] font-black uppercase text-slate-400">Same as Site</span>
+                                </label>
+                            </div>
+                            <textarea class="form-input h-20 resize-none bill-addr">${data?.billingAddress || ""}</textarea>
+                        </div>
+                        <div>
+                            <span class="label-text">C. GST Registration</span>
+                            <input type="text" class="form-input uppercase gst-no" value="${data?.gstNo || ""}">
+                        </div>
+                        <div class="md:col-span-2 border-t border-slate-100 pt-4 mt-2">
+                            <p class="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Site Contact Details</p>
+                        </div>
+                        <div><span class="label-text">D. Contact Full Name *</span><input type="text" class="form-input person-name" oninput="updateSummary('${rowId}')" value="${data?.contactName || ""}"></div>
+                        <div><span class="label-text">E. Designation</span><input type="text" class="form-input person-desig" value="${data?.contactDesig || ""}"></div>
+                        <div><span class="label-text">F. Mobile Number *</span><input type="text" class="form-input person-phone" value="${data?.contactPhone || ""}"></div>
+                        <div><span class="label-text">G. Email ID</span><input type="email" class="form-input person-email" value="${data?.contactEmail || ""}"></div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+            updateSrNumbers();
             lucide.createIcons();
-        }
+        };
 
-        // --- SUBMIT LOGIC (FIXED) ---
-        document.getElementById('clientForm').onsubmit = async (e) => {
-            e.preventDefault();
+        window.toggleExpand = (id) => {
+            const row = document.getElementById(id);
+            const isExpanded = row.classList.contains('expanded');
+            document.querySelectorAll('.site-row').forEach(r => {
+                r.classList.remove('expanded');
+                r.querySelector('.expand-icon').style.transform = 'rotate(0deg)';
+            });
+            if(!isExpanded) {
+                row.classList.add('expanded');
+                row.querySelector('.expand-icon').style.transform = 'rotate(180deg)';
+            }
+        };
+
+        window.updateSummary = (id) => {
+            const row = document.getElementById(id);
+            const addr = row.querySelector('.site-addr').value;
+            const name = row.querySelector('.person-name').value;
+            row.querySelector('.summary-addr').innerText = addr || 'New Site Location...';
+            row.querySelector('.summary-name').innerText = name || 'Pending Contact';
+        };
+
+        window.updateSrNumbers = () => {
+            document.querySelectorAll('.sr-num').forEach((el, i) => {
+                el.innerText = (i + 1).toString().padStart(2, '0');
+            });
+        };
+
+        window.removeSiteRow = id => {
+            if(document.querySelectorAll('.site-row').length > 1) {
+                document.getElementById(id).remove();
+                updateSrNumbers();
+            } else { alert("At least one location is mandatory."); }
+        };
+
+        window.toggleSync = id => {
+            const r = document.getElementById(id), c = r.querySelector('.sync-check').checked, i = r.querySelector('.bill-addr');
+            if(c) { i.value = r.querySelector('.site-addr').value; i.disabled = true; } 
+            else i.disabled = false;
+        };
+
+        window.saveProfile = async () => {
+            const comp = document.getElementById('compName').value.trim();
+            const rows = document.querySelectorAll('.site-row');
+            if(!comp) return alert("Company Name is required.");
+
             const btn = document.getElementById('saveBtn');
-            const companyName = document.getElementById('companyName').value.trim();
-            const clientEmail = document.getElementById('userEmail').value.trim();
-            const mainAddress = document.getElementById('mainAddress').value.trim();
+            btn.disabled = true; btn.innerText = "Processing Cloud Sync...";
 
-            if (!companyName || !clientEmail) return showMsg("Company Name & Email required!", "error");
-
-            btn.disabled = true;
-            btn.innerText = "Provisioning...";
-
-            // UID for client is based on their email or we can auto-generate (using email prefix as safe ID)
-            const clientUID = clientEmail.split('@')[0] + "_" + Math.random().toString(36).slice(-4);
+            const sites = Array.from(rows).map(r => ({
+                siteAddress: r.querySelector('.site-addr').value.trim(),
+                billingAddress: r.querySelector('.bill-addr').value.trim(),
+                gstNo: r.querySelector('.gst-no').value.trim().toUpperCase(),
+                contactName: r.querySelector('.person-name').value.trim(),
+                contactDesig: r.querySelector('.person-desig').value.trim(),
+                contactPhone: r.querySelector('.person-phone').value.trim(),
+                contactEmail: r.querySelector('.person-email').value.trim()
+            }));
 
             const payload = {
-                companyName: companyName,
-                userEmail: clientEmail,
-                address: mainAddress,
-                allSites: siteList.map(s => ({ siteAddress: s.siteAddress })),
-                createdAt: serverTimestamp(),
+                companyName: comp,
+                allSites: sites,
                 updatedAt: serverTimestamp(),
-                createdBy: 'admin-master',
+                address: sites[0].siteAddress,
+                contactPerson: sites[0].contactName,
+                phone: sites[0].contactPhone,
                 role: 'customer'
             };
 
             try {
-                // Public collection mein save karein taaki admin access kar sake
-                await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'customers', clientUID), payload);
+                const finalTargetId = cid || (comp.toLowerCase().replace(/[^a-z0-9]/g, '_') + "_" + Math.random().toString(36).slice(-4));
                 
-                showMsg("Business Registered Successfully! ✅", "success");
+                await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'customers', finalTargetId), payload, { merge: true });
+                await setDoc(doc(db, 'artifacts', APP_ID, 'users', finalTargetId, 'settings', 'profile'), payload, { merge: true });
                 
-                // IMPORTANT: RESET FORM AFTER SUCCESS
-                resetForm();
-
-            } catch (err) {
-                console.error(err);
-                showMsg("Registration Failed. Try again.", "error");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Create Business Account";
+                alert("Profile Information Saved! ✅");
+                
+                // Ask user if they want to enter another client
+                if(isAdmin && confirm("Do you want to register another client?")) {
+                    // Manual UI Reset
+                    document.getElementById('compName').value = "";
+                    document.getElementById('sitesContainer').innerHTML = "";
+                    addSiteRow(); 
+                    document.getElementById('statusBadge').classList.add('hidden');
+                    btn.disabled = false; btn.innerText = "Save Profile Information";
+                } else {
+                    window.location.href = isAdmin ? 'admin.html' : 'dashboard.html';
+                }
+            } catch (e) {
+                alert("Sync Failed: " + e.message);
+                btn.disabled = false; btn.innerText = "Save Profile Information";
             }
         };
 
-        function resetForm() {
-            // 1. Reset standard HTML inputs
-            document.getElementById('clientForm').reset();
-            
-            // 2. Clear JavaScript Site array
-            siteList = [];
-            
-            // 3. Clear UI for sites
-            renderSites();
-            
-            // 4. Focus on first input for next entry
-            document.getElementById('companyName').focus();
-        }
-
-        function showMsg(txt, type) {
-            const box = document.getElementById('messageBox');
-            box.innerText = txt;
-            box.style.display = 'block';
-            box.className = type === 'success' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white';
-            setTimeout(() => { box.style.display = 'none'; }, 4000);
-        }
-
+        window.goBack = () => { window.location.href = isAdmin ? 'admin.html' : 'dashboard.html'; };
         lucide.createIcons();
     </script>
 </body>
